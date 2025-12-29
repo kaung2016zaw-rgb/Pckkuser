@@ -1,6 +1,6 @@
-// keyboard.js - Laptop Keyboard Version for sale.html
+// keyboard.js - Modified for sale.html with a3.js integration
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('keyboard.js - LAPTOP KEYBOARD VERSION');
+    console.log('keyboard.js - MODIFIED FOR SALE.HTML WITH A3.JS INTEGRATION');
     
     // DOM Elements from sale.html
     const editNum1 = document.getElementById('editNum1');
@@ -11,6 +11,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const checkboxButtons = document.querySelectorAll('.checkbox-btn');
     const cptBtn = document.getElementById('cptBtn');
     const originalEditArea = document.getElementById('originalEditArea');
+    const betList = document.getElementById('betList');
+    const listView = document.querySelector('.list-view');
     
     // State variables
     let reverseMode = false;
@@ -19,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let selectedTypes = new Set();
     let currentField = editNum1;
     
-    // Special cases definitions
+    // Special cases definitions (aligned with a3.js)
     const specialCases = {
         'R': [], // R is handled specially
         'အပါ': [0, 11, 22, 33, 44, 55, 66, 77, 88, 99],
@@ -29,9 +31,6 @@ document.addEventListener('DOMContentLoaded', function() {
         'အပူး': [0, 11, 22, 33, 44, 55, 66, 77, 88, 99],
         'ပါဝါ': [5, 16, 27, 38, 49, 50, 61, 72, 83, 94],
         'နက္ခ': [7, 18, 24, 35, 42, 53, 69, 70, 81, 96],
-        'အခွေ': [], // Requires multiple digits
-        'ခွေပူး': [], // Requires multiple digits
-        'K': [], // Requires 1 digit input
         'ညီကို': [1, 12, 23, 34, 45, 56, 67, 78, 89, 90],
         'ကိုညီ': [9, 10, 21, 32, 43, 54, 65, 76, 87, 98],
         'ညီကိုR': [1, 12, 23, 34, 45, 56, 67, 78, 89, 90, 9, 10, 21, 32, 43, 54, 65, 76, 87, 98],
@@ -40,24 +39,19 @@ document.addEventListener('DOMContentLoaded', function() {
         'စုံမ': [1, 3, 5, 7, 9, 21, 23, 25, 27, 29, 41, 43, 45, 47, 49, 61, 63, 65, 67, 69, 81, 83, 85, 87, 89],
         'မစုံ': [10, 12, 14, 16, 18, 30, 32, 34, 36, 38, 50, 52, 54, 56, 58, 70, 72, 74, 76, 78, 90, 92, 94, 96, 98],
         'စုံပူး': [0, 22, 44, 66, 88],
-        'မပူး': [11, 33, 55, 77, 99],
-        'စုံကပ်': [], // Requires 1 digit input
-        'မကပ်': [], // Requires 1 digit input
-        'စုံကပ်R': [], // Requires 1 digit input
-        'မကပ်R': [], // Requires 1 digit input
-        'ကပ်': [] // Requires 1 digit input
+        'မပူး': [11, 33, 55, 77, 99]
     };
     
-    // Function keys mapping
-    const functionKeys = {
-        'F9': 'ထိပ်',
-        'F8': 'ပိတ်',
-        'F6': 'အပါ',
-        'F7': 'အပူး',
-        'F12': 'ဘရိတ်',
-        'F11': 'ပါဝါ',
-        'F10': 'နက္ခ'
+    // Even/Odd system (aligned with a3.js)
+    const evenOddCases = {
+        'စုံစုံ': { first: 'even', second: 'even' },
+        'မမ': { first: 'odd', second: 'odd' },
+        'စုံမ': { first: 'even', second: 'odd' },
+        'မစုံ': { first: 'odd', second: 'even' }
     };
+    
+    const evenDigits = [0, 2, 4, 6, 8];
+    const oddDigits = [1, 3, 5, 7, 9];
     
     // Initialize
     setupEventListeners();
@@ -117,7 +111,7 @@ document.addEventListener('DOMContentLoaded', function() {
         editNum3.addEventListener('focus', () => setCurrentField(editNum3));
         textview.addEventListener('click', () => setCurrentField(textview));
         
-        // Input field keyboard events
+        // Input field keyboard events - NO AUTO MOVE
         editNum1.addEventListener('keydown', handleKeyboardInput);
         editNum2.addEventListener('keydown', handleKeyboardInput);
         editNum3.addEventListener('keydown', handleKeyboardInput);
@@ -154,10 +148,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function handleGlobalKeyboard(e) {
-        // Function keys for special types
-        if (functionKeys[e.key]) {
+        // Enter key processing
+        if (e.key === 'Enter') {
             e.preventDefault();
-            handleFunctionKey(functionKeys[e.key]);
+            handleEnterKey();
             return;
         }
         
@@ -175,10 +169,20 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Enter key processing
-        if (e.key === 'Enter') {
+        // Function keys for special types
+        const functionKeys = {
+            'F9': 'ထိပ်',
+            'F8': 'ပိတ်',
+            'F6': 'အပါ',
+            'F7': 'အပူး',
+            'F12': 'ဘရိတ်',
+            'F11': 'ပါဝါ',
+            'F10': 'နက္ခ'
+        };
+        
+        if (functionKeys[e.key]) {
             e.preventDefault();
-            handleEnterKey();
+            handleFunctionKey(functionKeys[e.key]);
             return;
         }
     }
@@ -196,34 +200,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Auto-advance logic for editNum1
-        if (e.target === editNum1 && e.key.length === 1 && /[0-9]/.test(e.key)) {
-            setTimeout(() => {
-                if (shouldAutoAdvance(editNum1)) {
-                    if (selectedTypes.size === 0) {
-                        // Regular number - move to amount after 2 digits
-                        if (editNum1.value.length >= 2) {
-                            setCurrentField(editNum2);
-                        }
-                    } else {
-                        // Special mode - check if needs digit
-                        const needsDigit = needsDigitInput();
-                        if (needsDigit) {
-                            // For 1-digit special types
-                            const maxLength = getMaxLengthForField(editNum1);
-                            if (editNum1.value.length >= maxLength) {
-                                setCurrentField(editNum2);
-                            }
-                        } else {
-                            // For no-digit special types, number field might be empty or optional
-                            if (editNum1.value.length >= 2) {
-                                setCurrentField(editNum2);
-                            }
-                        }
-                    }
-                }
-            }, 10);
-        }
+        // NO AUTO-ADVANCE - user must press Enter to move to next field
     }
     
     function handleFunctionKey(type) {
@@ -348,7 +325,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function handleEnterKey() {
         // Process based on current field
         if (currentField === editNum1) {
-            // Move to next field
+            // Move to amount field
             if (editNum1.value.length > 0) {
                 setCurrentField(editNum2);
             }
@@ -391,12 +368,15 @@ document.addEventListener('DOMContentLoaded', function() {
             processSpecialModeNoDigit(amount);
         } else if (hasSpecialTypeWithDigit()) {
             processSpecialModeWithDigit(amount, reverseAmount);
+        } else if (hasEvenOddType()) {
+            processEvenOddBet(amount);
         } else {
             processRegularBet(amount, reverseAmount);
         }
         
         // Reset and focus on first field
         resetFields();
+        autoScrollToListView();
     }
     
     function validateInputs() {
@@ -467,18 +447,18 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!reverseMode) {
             // Regular bet without reverse
             numbers.forEach(num => {
-                addSingleBetToGlobalArray(num, amount, 'Regular');
+                addSingleBetToA3Array(num, amount, 'Regular');
             });
         } else {
             // Regular bet with reverse
             numbers.forEach(num => {
                 // Main bet
-                addSingleBetToGlobalArray(num, amount, 'Reverse(M)');
+                addSingleBetToA3Array(num, amount, 'Reverse(M)');
                 
                 // Reverse bet
                 const revNum = reverseNumber(num);
                 if (revNum !== num) {
-                    addSingleBetToGlobalArray(revNum, reverseAmount, 'Reverse(R)');
+                    addSingleBetToA3Array(revNum, reverseAmount, 'Reverse(R)');
                 }
             });
         }
@@ -486,13 +466,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function processSpecialModeNoDigit(amount) {
         const specialType = Array.from(selectedTypes).find(type => 
-            ['အပူး', 'ပါဝါ', 'နက္ခ', 'ညီကို', 'ကိုညီ', 'ညီကိုR', 
-             'စုံစုံ', 'မမ', 'စုံမ', 'မစုံ', 'စုံပူး', 'မပူး'].includes(type));
+            ['အပူး', 'ပါဝါ', 'နက္ခ', 'ညီကို', 'ကိုညီ', 'ညီကိုR'].includes(type));
         
         if (specialType && specialCases[specialType]) {
             const numbers = specialCases[specialType];
             numbers.forEach(num => {
-                addSingleBetToGlobalArray(num, amount, specialType);
+                addSingleBetToA3Array(num, amount, specialType);
             });
         }
     }
@@ -521,11 +500,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 const backNumbers = generateBackNumbers(digit);
                 
                 frontNumbers.forEach(num => {
-                    addSingleBetToGlobalArray(num, amount, 'ထိပ်');
+                    addSingleBetToA3Array(num, amount, 'ထိပ်');
                 });
                 
                 backNumbers.forEach(num => {
-                    addSingleBetToGlobalArray(num, reverseAmount, 'ပိတ် (R)');
+                    addSingleBetToA3Array(num, reverseAmount, 'ပိတ် (R)');
                 });
                 
                 return;
@@ -539,11 +518,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 const frontNumbers = generateFrontNumbers(digit);
                 
                 backNumbers.forEach(num => {
-                    addSingleBetToGlobalArray(num, amount, 'ပိတ်');
+                    addSingleBetToA3Array(num, amount, 'ပိတ်');
                 });
                 
                 frontNumbers.forEach(num => {
-                    addSingleBetToGlobalArray(num, reverseAmount, 'ထိပ် (R)');
+                    addSingleBetToA3Array(num, reverseAmount, 'ထိပ် (R)');
                 });
                 
                 return;
@@ -555,7 +534,25 @@ document.addEventListener('DOMContentLoaded', function() {
         if (numbers.length > 0) {
             const displayType = reverseMode ? specialType + ' (R)' : specialType;
             numbers.forEach(num => {
-                addSingleBetToGlobalArray(num, amount, displayType);
+                addSingleBetToA3Array(num, amount, displayType);
+            });
+        }
+    }
+    
+    function processEvenOddBet(amount) {
+        const evenOddType = Array.from(selectedTypes).find(type => 
+            ['စုံစုံ', 'မမ', 'စုံမ', 'မစုံ', 'စုံပူး', 'မပူး'].includes(type));
+        
+        if (evenOddType && evenOddCases[evenOddType]) {
+            const numbers = generateEvenOddNumbers(evenOddCases[evenOddType], false);
+            numbers.forEach(num => {
+                addSingleBetToA3Array(num, amount, evenOddType);
+            });
+        } else if (evenOddType && specialCases[evenOddType]) {
+            // For စုံပူး and မပူး
+            const numbers = specialCases[evenOddType];
+            numbers.forEach(num => {
+                addSingleBetToA3Array(num, amount, evenOddType);
             });
         }
     }
@@ -581,16 +578,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function needsDigitInputForType(type) {
-        const needsDigitTypes = ['အပါ', 'ထိပ်', 'ပိတ်', 'ဘရိတ်', 'K', 
-                                'စုံကပ်', 'မကပ်', 'စုံကပ်R', 'မကပ်R', 'ကပ်'];
+        const needsDigitTypes = ['အပါ', 'ထိပ်', 'ပိတ်', 'ဘရိတ်'];
         return needsDigitTypes.includes(type);
     }
     
     function hasSpecialTypeWithoutDigit() {
         const specialTypes = Array.from(selectedTypes);
-        const noDigitTypes = ['အပူး', 'ပါဝါ', 'နက္ခ', 'ညီကို', 'ကိုညီ', 
-                             'ညီကိုR', 'စုံစုံ', 'မမ', 'စုံမ', 'မစုံ', 
-                             'စုံပူး', 'မပူး'];
+        const noDigitTypes = ['အပူး', 'ပါဝါ', 'နက္ခ', 'ညီကို', 'ကိုညီ', 'ညီကိုR'];
         
         return specialTypes.some(type => noDigitTypes.includes(type));
     }
@@ -602,32 +596,14 @@ document.addEventListener('DOMContentLoaded', function() {
         return specialTypes.some(type => withDigitTypes.includes(type));
     }
     
-    function shouldAutoAdvance(field) {
-        if (field !== editNum1) return false;
+    function hasEvenOddType() {
+        const specialTypes = Array.from(selectedTypes);
+        const evenOddTypes = ['စုံစုံ', 'မမ', 'စုံမ', 'မစုံ', 'စုံပူး', 'မပူး'];
         
-        if (selectedTypes.size === 0) {
-            // Regular number - auto advance after 2 digits
-            return field.value.length >= 2;
-        } else if (needsDigitInput()) {
-            // Special types needing 1 digit
-            return field.value.length >= 1;
-        }
-        
-        return false;
+        return specialTypes.some(type => evenOddTypes.includes(type));
     }
     
-    function getMaxLengthForField(field) {
-        if (field === editNum1) {
-            if (needsDigitInput()) {
-                return 1; // For 1-digit special types
-            } else {
-                return 2; // Regular 2-digit numbers
-            }
-        }
-        return 7; // For amount fields
-    }
-    
-    // Helper functions for number generation (same as before)
+    // Helper functions for number generation
     function generateFrontNumbers(digit) {
         const numbers = [];
         for (let i = 0; i <= 9; i++) {
@@ -669,6 +645,44 @@ document.addEventListener('DOMContentLoaded', function() {
         return numbers;
     }
     
+    function generateEvenOddNumbers(caseType, includeReverse = false) {
+        const numbers = [];
+        
+        if (caseType.first === 'even' && caseType.second === 'even') {
+            for (const first of evenDigits) {
+                for (const second of evenDigits) {
+                    numbers.push(first * 10 + second);
+                }
+            }
+        } else if (caseType.first === 'odd' && caseType.second === 'odd') {
+            for (const first of oddDigits) {
+                for (const second of oddDigits) {
+                    numbers.push(first * 10 + second);
+                }
+            }
+        } else if (caseType.first === 'even' && caseType.second === 'odd') {
+            for (const first of evenDigits) {
+                for (const second of oddDigits) {
+                    numbers.push(first * 10 + second);
+                    if (includeReverse) {
+                        numbers.push(second * 10 + first);
+                    }
+                }
+            }
+        } else if (caseType.first === 'odd' && caseType.second === 'even') {
+            for (const first of oddDigits) {
+                for (const second of evenDigits) {
+                    numbers.push(first * 10 + second);
+                    if (includeReverse) {
+                        numbers.push(second * 10 + first);
+                    }
+                }
+            }
+        }
+        
+        return [...new Set(numbers)];
+    }
+    
     function parseNumberInput(input) {
         const numbers = [];
         const cleanInput = input.replace(/[^0-9\/\-]/g, '');
@@ -700,9 +714,9 @@ document.addEventListener('DOMContentLoaded', function() {
         return parseInt(s.split('').reverse().join(''));
     }
     
-    function addSingleBetToGlobalArray(num, amount, type) {
-        // Use global bets array
-        if (!window.bets) {
+    function addSingleBetToA3Array(num, amount, type) {
+        // Check if a3.js exists
+        if (typeof window.bets === 'undefined') {
             window.bets = [];
             window.totalAmount = 0;
         }
@@ -717,12 +731,16 @@ document.addEventListener('DOMContentLoaded', function() {
         window.bets.push(newBet);
         window.totalAmount += amount;
         
-        // Update display
-        updateDisplayDirectly();
+        // Update display through a3.js if it exists
+        if (typeof updateDisplay === 'function') {
+            updateDisplay();
+        } else {
+            // Fallback update
+            updateDisplayDirectly();
+        }
     }
     
     function updateDisplayDirectly() {
-        const betList = document.getElementById('betList');
         const totalDisplay = document.getElementById('totalAmount');
         const countDisplay = document.getElementById('listCount');
         
@@ -741,7 +759,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="bet-number">${bet.display}</div>
                     <div class="bet-amount">${bet.amount.toLocaleString()}</div>
                     <div class="bet-type">${bet.type}</div>
-                    <button class="delete-btn" onclick="deleteGlobalBet(${index})">ဖျက်</button>
+                    <button class="delete-btn" onclick="deleteBet(${index})">ဖျက်</button>
                 </div>
                 `;
             });
@@ -752,7 +770,16 @@ document.addEventListener('DOMContentLoaded', function() {
         countDisplay.textContent = currentBets.length;
     }
     
-    // Global delete function
+    function autoScrollToListView() {
+        if (listView) {
+            // Wait a bit for the DOM to update
+            setTimeout(() => {
+                listView.scrollTop = listView.scrollHeight;
+            }, 100);
+        }
+    }
+    
+    // Global delete function that works with a3.js
     window.deleteGlobalBet = function(index) {
         if (!confirm('ဖျက်မှာသေချာပါသလား?')) return;
         
@@ -761,9 +788,14 @@ document.addEventListener('DOMContentLoaded', function() {
             window.totalAmount -= deleted.amount;
             window.bets.splice(index, 1);
             
-            updateDisplayDirectly();
+            // Update display
+            if (typeof updateDisplay === 'function') {
+                updateDisplay();
+            } else {
+                updateDisplayDirectly();
+            }
         }
     };
     
-    console.log('Keyboard.js - Laptop Keyboard Version loaded successfully');
+    console.log('Keyboard.js - Integrated with a3.js loaded successfully');
 });
