@@ -293,32 +293,79 @@
             width: 100%;
         }
 
-        .input-row {
+        /* New Input Container with separate frame */
+        .input-frame {
+            border: 3px solid #9b59b6;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            display: none;
+            box-shadow: 0 4px 12px rgba(155, 89, 182, 0.1);
+        }
+
+        .frame-title {
+            text-align: center;
+            font-weight: bold;
+            color: #9b59b6;
+            margin-bottom: 15px;
+            font-size: 16px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #9b59b6;
+        }
+
+        .input-container {
             display: flex;
-            gap: 5px;
-            margin-bottom: 10px;
+            flex-direction: column;
+            gap: 10px;
             flex-shrink: 0;
             width: 100%;
         }
 
-        .text-display {
+        .input-row {
+            display: flex;
+            gap: 8px;
+            width: 100%;
+            align-items: center;
+        }
+
+        .input-field {
             flex: 1;
-            padding: 8px 4px;
-            border: 2px solid #ddd;
-            border-radius: 6px;
+            padding: 10px 12px;
+            border: 2px solid #3498db;
+            border-radius: 8px;
             font-family: 'Pyidaungsu', 'Myanmar Text', sans-serif;
-            font-size: 13px;
+            font-size: 16px;
             text-align: center;
             min-width: 0;
             box-sizing: border-box;
-            background: #f8f9fa;
+            background: white;
             color: #2c3e50;
             font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
+        .input-field:focus {
+            outline: none;
+            border-color: #2ecc71;
+            box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.2);
+        }
+
+        .text-display {
+           flex: 1;
+            padding: 10px 12px;
+            border: 2px solid #3498db;
+            border-radius: 8px;
+            font-family: 'Pyidaungsu', 'Myanmar Text', sans-serif;
+            font-size: 16px;
+            text-align: center;
+            min-width: 0;
+            box-sizing: border-box;
+            background: white;
+            color: #2c3e50;
+            font-weight: bold;
+        }
+
+        
         .buttons-scroll-container {
             border: 2px solid #ddd;
             border-radius: 10px;
@@ -441,6 +488,7 @@
             font-size: 12px;
         }
 
+        /* Checkbox buttons styling */
         .additional-buttons {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -448,14 +496,14 @@
             margin-top: 10px;
         }
 
-        .additional-btn {
-            padding: 10px 3px;
+        .checkbox-btn {
+            padding: 8px 3px;
             border: 2px solid #9b59b6;
             border-radius: 8px;
             background: white;
             color: #2c3e50;
             font-family: 'Pyidaungsu', 'Myanmar Text', sans-serif;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: bold;
             cursor: pointer;
             text-align: center;
@@ -463,6 +511,32 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .checkbox-btn.checked {
+            background: #9b59b6;
+            color: white;
+            border-color: #8e44ad;
+        }
+
+        .checkbox-btn::after {
+            content: '';
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 12px;
+            height: 12px;
+            border: 2px solid #ddd;
+            border-radius: 50%;
+            background: white;
+            transition: all 0.3s;
+        }
+
+        .checkbox-btn.checked::after {
+            background: #2ecc71;
+            border-color: #27ae60;
         }
 
         @media (max-width: 480px) {
@@ -474,13 +548,13 @@
                 padding: 12px;
             }
             
-            .text-display {
-                font-size: 12px;
-                padding: 6px 3px;
+            .input-field, .text-display {
+                font-size: 14px;
+                padding: 8px 10px;
             }
             
             .input-row {
-                gap: 4px;
+                gap: 5px;
             }
             
             .num-btn {
@@ -493,10 +567,17 @@
                 min-height: 86px;
             }
             
-            .additional-btn {
-                padding: 8px 2px;
-                font-size: 12px;
+            .checkbox-btn {
+                padding: 6px 2px;
+                font-size: 11px;
                 min-height: 35px;
+            }
+            
+            .checkbox-btn::after {
+                width: 10px;
+                height: 10px;
+                top: 3px;
+                right: 3px;
             }
             
             .cpt-btn {
@@ -511,26 +592,35 @@
             .additional-buttons {
                 gap: 4px;
             }
+            
+            .input-frame {
+                padding: 10px;
+            }
         }
         
         @media (max-width: 360px) {
-            .text-display {
-                font-size: 15px;
-                padding: 5px 2px;
+            .input-field, .text-display {
+                font-size: 13px;
+                padding: 6px 8px;
             }
             
             .input-row {
-                gap: 3px;
+                gap: 4px;
             }
             
             .num-btn {
                 padding: 8px 1px;
-                font-size: 15px;
-                min-height: 50px;
+                font-size: 12px;
+                min-height: 38px;
             }
             
             .action-special-btn {
                 min-height: 76px;
+            }
+            
+            .checkbox-btn {
+                font-size: 10px;
+                min-height: 32px;
             }
         }
 
@@ -658,64 +748,54 @@
                 <button id="cptBtn" class="cpt-btn">Keyboard</button>
             </div>
             
-            <!-- Input Row (for keyboard view) -->
-            <div id="inputRow" class="input-row" style="display: none;">
-                <div id="editTxt1" class="text-display">ဂဏန်း</div>
-                <div id="textView" class="text-display"></div>
-                <div id="editTxt2" class="text-display">ယူနစ်</div>
-                <div id="editTxt3" class="text-display"></div>
+            <!-- New Input Container with separate frame -->
+            <div id="inputFrame" class="input-frame">
+               
+                <div class="input-container">
+                    <div class="input-row">
+                        <input type="number" id="editNum1" class="input-field" placeholder="ဂဏန်း" min="0" max="99">
+                        <div id="textview" class="text-display">-</div>
+                        <input type="number" id="editNum2" class="input-field" placeholder="ယူနစ်" min="0">
+                        <input type="number" id="editNum3" class="input-field" placeholder="အာယူနစ်" min="0" max="1000">
+                    </div>
+                 
+                </div>
             </div>
             
             <!-- Keyboard Container -->
             <div id="buttonsScrollContainer" class="buttons-scroll-container">
                 <div class="button-grid">
-                    <button class="num-btn">1</button>
-                    <button class="num-btn">2</button>
-                    <button class="num-btn">3</button>
-                    <button class="num-btn special-btn">R</button>
-                    
-                    <button class="num-btn">4</button>
-                    <button class="num-btn">5</button>
-                    <button class="num-btn">6</button>
-                    <button class="num-btn special-btn">အပါ</button>
-                    
-                    <button class="num-btn">7</button>
-                    <button class="num-btn">8</button>
-                    <button class="num-btn">9</button>
-                    <button class="num-btn action-special-btn">OK</button>
-                    
-                    <button class="num-btn">00</button>
-                    <button class="num-btn">0</button>
-                    <button class="num-btn special-btn">DEL</button>
+                    <!-- Number buttons will be added here by JavaScript -->
                     <div style="visibility: hidden;"></div>
                 </div>
                 
+                <!-- Checkbox Buttons -->
                 <div class="additional-buttons">
-                    <button class="additional-btn">ထိပ်</button>
-                    <button class="additional-btn">ပိတ်</button>
-                    <button class="additional-btn">ဘရိတ်</button>
-                    <button class="additional-btn">အပူး</button>
-                    <button class="additional-btn">ပါဝါ</button>
-                    <button class="additional-btn">နက္ခ</button>
-                    <button class="additional-btn">အခွေ</button>
-                    <button class="additional-btn">ခွေပူး</button>
-                    <button class="additional-btn">K</button>
-                    <button class="additional-btn">ညီကို</button>
-                    <button class="additional-btn">ကိုညီ</button>
-                    <button class="additional-btn">ညီကိုR</button>
-                    <button class="additional-btn">စုံစုံ</button>
-                    <button class="additional-btn">မမ</button>
-                    <button class="additional-btn">စုံမ</button>
-                    <button class="additional-btn">မစုံ</button>
-                    <button class="additional-btn">စုံပူး</button>
-                    <button class="additional-btn">မပူး</button>
-                    <button class="additional-btn">စုံကပ်</button>
-                    <button class="additional-btn">မကပ်</button>
-                    <button class="additional-btn">စုံကပ်R</button>
-                   <button class="additional-btn">မကပ်R</button>
-                    <button class="additional-btn">ကပ်</button>
- 
-                    <div style="visibility: hidden;"></div>
+                    <button class="checkbox-btn" data-type="R">R</button>
+                    <button class="checkbox-btn" data-type="အပါ">အပါ</button>
+                    <button class="checkbox-btn" data-type="ထိပ်">ထိပ်</button>
+                    <button class="checkbox-btn" data-type="ပိတ်">ပိတ်</button>
+                    <button class="checkbox-btn" data-type="ဘရိတ်">ဘရိတ်</button>
+                    <button class="checkbox-btn" data-type="အပူး">အပူး</button>
+                    <button class="checkbox-btn" data-type="ပါဝါ">ပါဝါ</button>
+                    <button class="checkbox-btn" data-type="နက္ခ">နက္ခ</button>
+                    <button class="checkbox-btn" data-type="အခွေ">အခွေ</button>
+                    <button class="checkbox-btn" data-type="ခွေပူး">ခွေပူး</button>
+                    <button class="checkbox-btn" data-type="K">K</button>
+                    <button class="checkbox-btn" data-type="ညီကို">ညီကို</button>
+                    <button class="checkbox-btn" data-type="ကိုညီ">ကိုညီ</button>
+                    <button class="checkbox-btn" data-type="ညီကိုR">ညီကိုR</button>
+                    <button class="checkbox-btn" data-type="စုံစုံ">စုံစုံ</button>
+                    <button class="checkbox-btn" data-type="မမ">မမ</button>
+                    <button class="checkbox-btn" data-type="စုံမ">စုံမ</button>
+                    <button class="checkbox-btn" data-type="မစုံ">မစုံ</button>
+                    <button class="checkbox-btn" data-type="စုံပူး">စုံပူး</button>
+                    <button class="checkbox-btn" data-type="မပူး">မပူး</button>
+                    <button class="checkbox-btn" data-type="စုံကပ်">စုံကပ်</button>
+                    <button class="checkbox-btn" data-type="မကပ်">မကပ်</button>
+                    <button class="checkbox-btn" data-type="စုံကပ်R">စုံကပ်R</button>
+                    <button class="checkbox-btn" data-type="မကပ်R">မကပ်R</button>
+                    <button class="checkbox-btn" data-type="ကပ်">ကပ်</button>
                 </div>
             </div>
             
@@ -764,25 +844,74 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const cptBtn = document.getElementById('cptBtn');
-            const inputRow = document.getElementById('inputRow');
+            const inputFrame = document.getElementById('inputFrame');
             const buttonsScrollContainer = document.getElementById('buttonsScrollContainer');
             const originalEditArea = document.getElementById('originalEditArea');
+            const checkboxButtons = document.querySelectorAll('.checkbox-btn');
+            const textview = document.getElementById('textview');
             
             let isOriginalView = true; // Start with original view
+            let selectedTypes = new Set(); // Store selected checkbox types
             
+            // Toggle checkbox button selection
+            checkboxButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const type = this.getAttribute('data-type');
+                    this.classList.toggle('checked');
+                    
+                    if (this.classList.contains('checked')) {
+                        selectedTypes.add(type);
+                    } else {
+                        selectedTypes.delete(type);
+                    }
+                    
+                    // Update textview display based on selected types
+                    updateTextView();
+                    // Update input fields based on selection
+                    updateInputFields();
+                });
+            });
+            
+            // Update textview display
+            function updateTextView() {
+                if (selectedTypes.size === 0) {
+                    textview.textContent = '-';
+                    textview.style.borderColor = '#e74c3c';
+                } else {
+                    const typesArray = Array.from(selectedTypes);
+                    textview.textContent = typesArray.join('/');
+                    textview.style.borderColor = '#2ecc71';
+                    textview.style.backgroundColor = '#e8f8f5';
+                }
+            }
+            
+            // Update input fields based on selected types
+            function updateInputFields() {
+                const editNum1 = document.getElementById('editNum1');
+                
+                // If special types are selected, focus on amount field
+                if (selectedTypes.size > 0) {
+                    editNum1.placeholder = "ဂဏန်း (optional)";
+                    document.getElementById('editNum2').focus();
+                } else {
+                    editNum1.placeholder = "ဂဏန်း";
+                }
+            }
+            
+            // Toggle between keyboard and textarea view
             cptBtn.addEventListener('click', function() {
                 isOriginalView = !isOriginalView;
                 
                 if (!isOriginalView) {
                     // Switch to keyboard view
                     cptBtn.textContent = 'CopyPate';
-                    inputRow.style.display = 'flex';
+                    inputFrame.style.display = 'block';
                     buttonsScrollContainer.style.display = 'block';
                     originalEditArea.style.display = 'none';
                 } else {
                     // Switch to original textarea view
                     cptBtn.textContent = 'Keyboard';
-                    inputRow.style.display = 'none';
+                    inputFrame.style.display = 'none';
                     buttonsScrollContainer.style.display = 'none';
                     originalEditArea.style.display = 'flex';
                 }
@@ -790,9 +919,12 @@
             
             // Initialize with original view visible
             cptBtn.textContent = 'Keyboard';
-            inputRow.style.display = 'none';
+            inputFrame.style.display = 'none';
             buttonsScrollContainer.style.display = 'none';
             originalEditArea.style.display = 'flex';
+            
+            // Initialize textview
+            updateTextView();
         });
     </script>
 
