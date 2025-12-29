@@ -1,6 +1,6 @@
-// keyboard.js - Modified for sale.html with a3.js integration
+// keyboard.js - Modified for sale.html with original a3.js integration
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('keyboard.js - MODIFIED FOR SALE.HTML WITH A3.JS INTEGRATION');
+    console.log('keyboard.js - ORIGINAL STYLE WITH A3.JS INTEGRATION');
     
     // DOM Elements from sale.html
     const editNum1 = document.getElementById('editNum1');
@@ -14,20 +14,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const betList = document.getElementById('betList');
     const listView = document.querySelector('.list-view');
     
-    // State variables
+    // State variables (same as original keyboard.js)
     let reverseMode = false;
     let isSpecialMode = false;
     let specialType = '';
+    let isComboMode = false;
+    let comboType = '';
     let selectedTypes = new Set();
-    let currentField = editNum1;
     
-    // Special cases definitions (aligned with a3.js)
+    // Special cases definitions (same as original keyboard.js)
     const specialCases = {
-        'R': [], // R is handled specially
-        'အပါ': [0, 11, 22, 33, 44, 55, 66, 77, 88, 99],
-        'ထိပ်': [], // Requires 1 digit input
-        'ပိတ်': [], // Requires 1 digit input
-        'ဘရိတ်': [], // Requires 1 digit input (sum of digits)
         'အပူး': [0, 11, 22, 33, 44, 55, 66, 77, 88, 99],
         'ပါဝါ': [5, 16, 27, 38, 49, 50, 61, 72, 83, 94],
         'နက္ခ': [7, 18, 24, 35, 42, 53, 69, 70, 81, 96],
@@ -42,17 +38,6 @@ document.addEventListener('DOMContentLoaded', function() {
         'မပူး': [11, 33, 55, 77, 99]
     };
     
-    // Even/Odd system (aligned with a3.js)
-    const evenOddCases = {
-        'စုံစုံ': { first: 'even', second: 'even' },
-        'မမ': { first: 'odd', second: 'odd' },
-        'စုံမ': { first: 'even', second: 'odd' },
-        'မစုံ': { first: 'odd', second: 'even' }
-    };
-    
-    const evenDigits = [0, 2, 4, 6, 8];
-    const oddDigits = [1, 3, 5, 7, 9];
-    
     // Initialize
     setupEventListeners();
     resetFields();
@@ -61,12 +46,14 @@ document.addEventListener('DOMContentLoaded', function() {
         editNum1.value = '';
         editNum2.value = '';
         editNum3.value = '';
-        editNum3.style.display = 'none'; // Hide reverse field initially
+        editNum3.style.display = 'none';
         textview.textContent = '-';
         
         reverseMode = false;
         isSpecialMode = false;
         specialType = '';
+        isComboMode = false;
+        comboType = '';
         selectedTypes.clear();
         
         // Reset checkbox buttons
@@ -79,42 +66,28 @@ document.addEventListener('DOMContentLoaded', function() {
         textview.style.backgroundColor = 'white';
         
         // Set focus to first field
-        setCurrentField(editNum1);
+        editNum1.focus();
+        editNum1.select();
     }
     
-    function setCurrentField(field) {
-        currentField = field;
-        
-        // Remove highlights from all fields
-        [editNum1, editNum2, editNum3].forEach(f => {
-            f.style.borderColor = '#3498db';
-            f.style.backgroundColor = 'white';
-        });
-        textview.style.borderColor = '#3498db';
-        textview.style.backgroundColor = 'white';
-        
-        // Highlight current field
-        field.style.borderColor = '#2ecc71';
-        field.style.backgroundColor = '#e8f8f5';
-        
-        // Focus on input field
-        if (field !== textview) {
-            field.focus();
-            field.select();
+    function updateTextView() {
+        if (selectedTypes.size === 0) {
+            textview.textContent = '-';
+            textview.style.borderColor = '#3498db';
+            textview.style.backgroundColor = 'white';
+        } else {
+            const typesArray = Array.from(selectedTypes);
+            textview.textContent = typesArray.join('/');
+            textview.style.borderColor = '#2ecc71';
+            textview.style.backgroundColor = '#e8f8f5';
         }
     }
     
     function setupEventListeners() {
-        // Input field focus events
-        editNum1.addEventListener('focus', () => setCurrentField(editNum1));
-        editNum2.addEventListener('focus', () => setCurrentField(editNum2));
-        editNum3.addEventListener('focus', () => setCurrentField(editNum3));
-        textview.addEventListener('click', () => setCurrentField(textview));
-        
-        // Input field keyboard events - NO AUTO MOVE
-        editNum1.addEventListener('keydown', handleKeyboardInput);
-        editNum2.addEventListener('keydown', handleKeyboardInput);
-        editNum3.addEventListener('keydown', handleKeyboardInput);
+        // Input field events
+        editNum1.addEventListener('focus', () => editNum1.select());
+        editNum2.addEventListener('focus', () => editNum2.select());
+        editNum3.addEventListener('focus', () => editNum3.select());
         
         // Checkbox buttons
         checkboxButtons.forEach(button => {
@@ -133,7 +106,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 inputFrame.style.display = 'block';
                 buttonsScrollContainer.style.display = 'block';
                 originalEditArea.style.display = 'none';
-                setCurrentField(editNum1);
+                editNum1.focus();
+                editNum1.select();
             } else {
                 // Switch to textarea view
                 cptBtn.textContent = 'Keyboard';
@@ -148,7 +122,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function handleGlobalKeyboard(e) {
-        // Enter key processing
+        // Enter key processing - ORIGINAL LOGIC
         if (e.key === 'Enter') {
             e.preventDefault();
             handleEnterKey();
@@ -156,14 +130,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Slash (/) key for R mode
-        if (e.key === '/' && currentField === editNum2) {
+        if (e.key === '/' && (document.activeElement === editNum2 || document.activeElement === editNum3)) {
             e.preventDefault();
             handleSlashKey();
             return;
         }
         
-        // Backspace for delete
-        if (e.key === 'Backspace' && currentField === textview) {
+        // Backspace for delete when focus is on textview
+        if (e.key === 'Backspace' && document.activeElement === textview) {
             e.preventDefault();
             handleDelete();
             return;
@@ -185,22 +159,48 @@ document.addEventListener('DOMContentLoaded', function() {
             handleFunctionKey(functionKeys[e.key]);
             return;
         }
-    }
-    
-    function handleKeyboardInput(e) {
-        // Only allow numbers and some special keys
-        const allowedKeys = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 
-                            'Backspace', 'Tab', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
-                            'Delete', 'Home', 'End'];
         
-        if (!allowedKeys.includes(e.key) && 
-            !(e.ctrlKey && ['a', 'c', 'v', 'x'].includes(e.key)) &&
-            !(e.key.length === 1 && /[0-9]/.test(e.key))) {
-            e.preventDefault();
+        // Number input handling
+        if (e.key.length === 1 && /[0-9]/.test(e.key)) {
+            handleNumberInput(e.key);
             return;
         }
+    }
+    
+    function handleNumberInput(digit) {
+        const activeElement = document.activeElement;
         
-        // NO AUTO-ADVANCE - user must press Enter to move to next field
+        if (activeElement === editNum1) {
+            const maxLength = getMaxLengthForField(editNum1);
+            if (editNum1.value.length < maxLength) {
+                editNum1.value += digit;
+            }
+            // NO AUTO MOVE - wait for Enter
+        } 
+        else if (activeElement === editNum2) {
+            if (editNum2.value.length < 7) {
+                editNum2.value += digit;
+            }
+        }
+        else if (activeElement === editNum3) {
+            if (editNum3.value.length < 7) {
+                editNum3.value += digit;
+            }
+        }
+    }
+    
+    function getMaxLengthForField(field) {
+        if (field === editNum1) {
+            if (selectedTypes.has('အခွေ') || selectedTypes.has('ခွေပူး')) {
+                return 10; // For combo modes
+            } else if (selectedTypes.has('အပါ') || selectedTypes.has('ထိပ်') || 
+                      selectedTypes.has('ပိတ်') || selectedTypes.has('ဘရိတ်')) {
+                return 1; // For 1-digit special types
+            } else {
+                return 2; // Regular 2-digit numbers
+            }
+        }
+        return 7; // For amount fields
     }
     
     function handleFunctionKey(type) {
@@ -222,19 +222,17 @@ document.addEventListener('DOMContentLoaded', function() {
         // Set focus based on type
         const needsDigit = ['အပါ', 'ထိပ်', 'ပိတ်', 'ဘရိတ်'].includes(type);
         if (needsDigit) {
-            setCurrentField(editNum1);
+            editNum1.focus();
+            editNum1.select();
         } else {
-            setCurrentField(editNum2);
+            editNum2.focus();
+            editNum2.select();
         }
     }
     
     function handleSlashKey() {
-        // Only allow / when in editNum2 field
-        if (currentField !== editNum2) return;
-        
-        // Check if R is allowed (only for regular bets)
+        // Check if R is allowed
         if (selectedTypes.size > 0 && !selectedTypes.has('R')) {
-            // Check if allowed types for R
             const allowedWithR = ['ထိပ်', 'ပိတ်'];
             const hasAllowedType = Array.from(selectedTypes).some(type => allowedWithR.includes(type));
             
@@ -257,7 +255,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Show reverse amount field
         editNum3.style.display = 'block';
         reverseMode = true;
-        setCurrentField(editNum3);
+        editNum3.focus();
+        editNum3.select();
     }
     
     function handleCheckboxButton(button) {
@@ -297,59 +296,64 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Auto-set focus based on selection
         if (type === 'R') {
-            setCurrentField(editNum3);
+            editNum3.focus();
+            editNum3.select();
         } else if (needsDigitInputForType(type)) {
-            setCurrentField(editNum1);
+            editNum1.focus();
+            editNum1.select();
         } else {
-            setCurrentField(editNum2);
+            editNum2.focus();
+            editNum2.select();
         }
     }
     
     function handleDelete() {
-        if (currentField === textview) {
-            // Clear selected types
-            selectedTypes.clear();
-            checkboxButtons.forEach(btn => {
-                btn.classList.remove('checked');
-            });
-            updateTextView();
-            editNum3.style.display = 'none';
-            reverseMode = false;
-            editNum3.value = '';
-            return;
-        }
-        
-        // For input fields, let default backspace handle it
+        // Clear selected types
+        selectedTypes.clear();
+        checkboxButtons.forEach(btn => {
+            btn.classList.remove('checked');
+        });
+        updateTextView();
+        editNum3.style.display = 'none';
+        reverseMode = false;
+        editNum3.value = '';
+        editNum1.focus();
+        editNum1.select();
     }
     
     function handleEnterKey() {
-        // Process based on current field
-        if (currentField === editNum1) {
-            // Move to amount field
+        const activeElement = document.activeElement;
+        
+        if (activeElement === editNum1) {
+            // Move to amount field if number is entered
             if (editNum1.value.length > 0) {
-                setCurrentField(editNum2);
+                editNum2.focus();
+                editNum2.select();
             }
-        } else if (currentField === editNum2) {
+        } 
+        else if (activeElement === editNum2) {
             // Check if we should process or move to reverse
             if (reverseMode && editNum3.style.display !== 'none') {
-                setCurrentField(editNum3);
+                editNum3.focus();
+                editNum3.select();
             } else {
                 // Process the bet
-                processBet();
+                processOKButton();
             }
-        } else if (currentField === editNum3) {
+        }
+        else if (activeElement === editNum3) {
             // Process the bet
-            processBet();
+            processOKButton();
         }
     }
     
-    function processBet() {
-        // Validate and process the bet
+    function processOKButton() {
+        // Validate inputs
         if (!validateInputs()) {
             return;
         }
         
-        // Get amount (multiply by 100 for unit)
+        // Get amount (multiply by 100 for unit) - ORIGINAL LOGIC
         const unitAmount = parseInt(editNum2.value);
         const amount = unitAmount * 100;
         
@@ -361,15 +365,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Process based on selected types
-        if (selectedTypes.size === 0) {
-            // Regular bet
-            processRegularBet(amount, reverseAmount);
+        if (selectedTypes.has('အခွေ') || selectedTypes.has('ခွေပူး')) {
+            processComboMode(amount);
         } else if (hasSpecialTypeWithoutDigit()) {
             processSpecialModeNoDigit(amount);
         } else if (hasSpecialTypeWithDigit()) {
             processSpecialModeWithDigit(amount, reverseAmount);
-        } else if (hasEvenOddType()) {
-            processEvenOddBet(amount);
         } else {
             processRegularBet(amount, reverseAmount);
         }
@@ -384,14 +385,16 @@ document.addEventListener('DOMContentLoaded', function() {
         if (editNum1.value === '') {
             if (needsDigitInput()) {
                 alert('ဂဏန်းထည့်ပါ');
-                setCurrentField(editNum1);
+                editNum1.focus();
+                editNum1.select();
                 return false;
             }
         } else {
             const num = parseInt(editNum1.value);
             if (isNaN(num)) {
                 alert('ဂဏန်းမှားယွင်းနေပါသည်');
-                setCurrentField(editNum1);
+                editNum1.focus();
+                editNum1.select();
                 return false;
             }
         }
@@ -399,14 +402,16 @@ document.addEventListener('DOMContentLoaded', function() {
         // Check amount field
         if (editNum2.value === '') {
             alert('ယူနစ်ထည့်ပါ');
-            setCurrentField(editNum2);
+            editNum2.focus();
+            editNum2.select();
             return false;
         }
         
         const unit = parseInt(editNum2.value);
         if (isNaN(unit) || unit < 1) {
             alert('ယူနစ်မှားယွင်းနေပါသည်');
-            setCurrentField(editNum2);
+            editNum2.focus();
+            editNum2.select();
             return false;
         }
         
@@ -419,7 +424,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 const reverseUnit = parseInt(editNum3.value);
                 if (isNaN(reverseUnit) || reverseUnit < 1) {
                     alert('အာယူနစ်မှားယွင်းနေပါသည်');
-                    setCurrentField(editNum3);
+                    editNum3.focus();
+                    editNum3.select();
                     return false;
                 }
             }
@@ -428,58 +434,38 @@ document.addEventListener('DOMContentLoaded', function() {
         return true;
     }
     
-    function processRegularBet(amount, reverseAmount) {
-        const numberInput = editNum1.value;
+    function processComboMode(amount) {
+        const digitsStr = editNum1.value;
+        const comboType = selectedTypes.has('အခွေ') ? 'အခွေ' : 'ခွေပူး';
         
-        if (numberInput === '') {
-            alert('ဂဏန်းထည့်ပါ');
-            setCurrentField(editNum1);
-            return;
-        }
-        
-        const numbers = parseNumberInput(numberInput);
-        if (numbers.length === 0) {
-            alert('ဂဏန်းမှားယွင်းနေပါသည်');
-            setCurrentField(editNum1);
-            return;
-        }
-        
-        if (!reverseMode) {
-            // Regular bet without reverse
-            numbers.forEach(num => {
-                addSingleBetToA3Array(num, amount, 'Regular');
-            });
+        let numbers;
+        if (comboType === 'အခွေ') {
+            numbers = generateAhkwayNumbers(digitsStr);
         } else {
-            // Regular bet with reverse
-            numbers.forEach(num => {
-                // Main bet
-                addSingleBetToA3Array(num, amount, 'Reverse(M)');
-                
-                // Reverse bet
-                const revNum = reverseNumber(num);
-                if (revNum !== num) {
-                    addSingleBetToA3Array(revNum, reverseAmount, 'Reverse(R)');
-                }
-            });
+            numbers = generateKhwayPhuNumbers(digitsStr);
+        }
+        
+        if (numbers && numbers.length > 0) {
+            addBetsToA3Array(numbers, amount, comboType);
         }
     }
     
     function processSpecialModeNoDigit(amount) {
         const specialType = Array.from(selectedTypes).find(type => 
-            ['အပူး', 'ပါဝါ', 'နက္ခ', 'ညီကို', 'ကိုညီ', 'ညီကိုR'].includes(type));
+            ['အပူး', 'ပါဝါ', 'နက္ခ', 'ညီကို', 'ကိုညီ', 'ညီကိုR',
+             'စုံစုံ', 'မမ', 'စုံမ', 'မစုံ', 'စုံပူး', 'မပူး'].includes(type));
         
         if (specialType && specialCases[specialType]) {
             const numbers = specialCases[specialType];
-            numbers.forEach(num => {
-                addSingleBetToA3Array(num, amount, specialType);
-            });
+            addBetsToA3Array(numbers, amount, specialType);
         }
     }
     
     function processSpecialModeWithDigit(amount, reverseAmount) {
         if (editNum1.value === '') {
             alert('ဂဏန်းထည့်ပါ');
-            setCurrentField(editNum1);
+            editNum1.focus();
+            editNum1.select();
             return;
         }
         
@@ -499,14 +485,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 const frontNumbers = generateFrontNumbers(digit);
                 const backNumbers = generateBackNumbers(digit);
                 
-                frontNumbers.forEach(num => {
-                    addSingleBetToA3Array(num, amount, 'ထိပ်');
-                });
-                
-                backNumbers.forEach(num => {
-                    addSingleBetToA3Array(num, reverseAmount, 'ပိတ် (R)');
-                });
-                
+                addBetsToA3Array(frontNumbers, amount, 'ထိပ်');
+                addBetsToA3Array(backNumbers, reverseAmount, 'ပိတ် (R)');
                 return;
             }
         } else if (specialType === 'ပိတ်') {
@@ -517,14 +497,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 const backNumbers = generateBackNumbers(digit);
                 const frontNumbers = generateFrontNumbers(digit);
                 
-                backNumbers.forEach(num => {
-                    addSingleBetToA3Array(num, amount, 'ပိတ်');
-                });
-                
-                frontNumbers.forEach(num => {
-                    addSingleBetToA3Array(num, reverseAmount, 'ထိပ် (R)');
-                });
-                
+                addBetsToA3Array(backNumbers, amount, 'ပိတ်');
+                addBetsToA3Array(frontNumbers, reverseAmount, 'ထိပ် (R)');
                 return;
             }
         } else if (specialType === 'ဘရိတ်') {
@@ -533,58 +507,57 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (numbers.length > 0) {
             const displayType = reverseMode ? specialType + ' (R)' : specialType;
-            numbers.forEach(num => {
-                addSingleBetToA3Array(num, amount, displayType);
-            });
+            addBetsToA3Array(numbers, amount, displayType);
         }
     }
     
-    function processEvenOddBet(amount) {
-        const evenOddType = Array.from(selectedTypes).find(type => 
-            ['စုံစုံ', 'မမ', 'စုံမ', 'မစုံ', 'စုံပူး', 'မပူး'].includes(type));
+    function processRegularBet(amount, reverseAmount) {
+        const numberInput = editNum1.value;
         
-        if (evenOddType && evenOddCases[evenOddType]) {
-            const numbers = generateEvenOddNumbers(evenOddCases[evenOddType], false);
-            numbers.forEach(num => {
-                addSingleBetToA3Array(num, amount, evenOddType);
-            });
-        } else if (evenOddType && specialCases[evenOddType]) {
-            // For စုံပူး and မပူး
-            const numbers = specialCases[evenOddType];
-            numbers.forEach(num => {
-                addSingleBetToA3Array(num, amount, evenOddType);
-            });
+        if (numberInput === '') {
+            alert('ဂဏန်းထည့်ပါ');
+            editNum1.focus();
+            editNum1.select();
+            return;
         }
-    }
-    
-    function updateTextView() {
-        if (selectedTypes.size === 0) {
-            textview.textContent = '-';
-            textview.style.borderColor = '#3498db';
-            textview.style.backgroundColor = 'white';
+        
+        const numbers = parseNumberInput(numberInput);
+        if (numbers.length === 0) {
+            alert('ဂဏန်းမှားယွင်းနေပါသည်');
+            editNum1.focus();
+            editNum1.select();
+            return;
+        }
+        
+        if (!reverseMode) {
+            // Regular bet without reverse
+            addBetsToA3Array(numbers, amount, 'Regular');
         } else {
-            const typesArray = Array.from(selectedTypes);
-            textview.textContent = typesArray.join('/');
-            textview.style.borderColor = '#2ecc71';
-            textview.style.backgroundColor = '#e8f8f5';
+            // Regular bet with reverse
+            addBetsToA3Array(numbers, amount, 'Reverse(M)');
+            
+            // Add reverse bets
+            const reverseNumbers = numbers.map(num => reverseNumber(num));
+            addBetsToA3Array(reverseNumbers, reverseAmount, 'Reverse(R)');
         }
     }
     
     function needsDigitInput() {
         const specialTypes = Array.from(selectedTypes);
-        const needsDigitTypes = ['အပါ', 'ထိပ်', 'ပိတ်', 'ဘရိတ်'];
+        const needsDigitTypes = ['အပါ', 'ထိပ်', 'ပိတ်', 'ဘရိတ်', 'အခွေ', 'ခွေပူး'];
         
         return specialTypes.some(type => needsDigitTypes.includes(type));
     }
     
     function needsDigitInputForType(type) {
-        const needsDigitTypes = ['အပါ', 'ထိပ်', 'ပိတ်', 'ဘရိတ်'];
+        const needsDigitTypes = ['အပါ', 'ထိပ်', 'ပိတ်', 'ဘရိတ်', 'အခွေ', 'ခွေပူး'];
         return needsDigitTypes.includes(type);
     }
     
     function hasSpecialTypeWithoutDigit() {
         const specialTypes = Array.from(selectedTypes);
-        const noDigitTypes = ['အပူး', 'ပါဝါ', 'နက္ခ', 'ညီကို', 'ကိုညီ', 'ညီကိုR'];
+        const noDigitTypes = ['အပူး', 'ပါဝါ', 'နက္ခ', 'ညီကို', 'ကိုညီ', 'ညီကိုR',
+                             'စုံစုံ', 'မမ', 'စုံမ', 'မစုံ', 'စုံပူး', 'မပူး'];
         
         return specialTypes.some(type => noDigitTypes.includes(type));
     }
@@ -596,14 +569,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return specialTypes.some(type => withDigitTypes.includes(type));
     }
     
-    function hasEvenOddType() {
-        const specialTypes = Array.from(selectedTypes);
-        const evenOddTypes = ['စုံစုံ', 'မမ', 'စုံမ', 'မစုံ', 'စုံပူး', 'မပူး'];
-        
-        return specialTypes.some(type => evenOddTypes.includes(type));
-    }
-    
-    // Helper functions for number generation
+    // Number generation functions (ORIGINAL FROM keyboard.js)
     function generateFrontNumbers(digit) {
         const numbers = [];
         for (let i = 0; i <= 9; i++) {
@@ -645,42 +611,62 @@ document.addEventListener('DOMContentLoaded', function() {
         return numbers;
     }
     
-    function generateEvenOddNumbers(caseType, includeReverse = false) {
-        const numbers = [];
+    function generateCombinationsFromArray(arr, k) {
+        const combinations = [];
         
-        if (caseType.first === 'even' && caseType.second === 'even') {
-            for (const first of evenDigits) {
-                for (const second of evenDigits) {
-                    numbers.push(first * 10 + second);
-                }
+        function combine(start, current) {
+            if (current.length === k) {
+                combinations.push([...current]);
+                return;
             }
-        } else if (caseType.first === 'odd' && caseType.second === 'odd') {
-            for (const first of oddDigits) {
-                for (const second of oddDigits) {
-                    numbers.push(first * 10 + second);
-                }
-            }
-        } else if (caseType.first === 'even' && caseType.second === 'odd') {
-            for (const first of evenDigits) {
-                for (const second of oddDigits) {
-                    numbers.push(first * 10 + second);
-                    if (includeReverse) {
-                        numbers.push(second * 10 + first);
-                    }
-                }
-            }
-        } else if (caseType.first === 'odd' && caseType.second === 'even') {
-            for (const first of oddDigits) {
-                for (const second of evenDigits) {
-                    numbers.push(first * 10 + second);
-                    if (includeReverse) {
-                        numbers.push(second * 10 + first);
-                    }
-                }
+            
+            for (let i = start; i < arr.length; i++) {
+                current.push(arr[i]);
+                combine(i + 1, current);
+                current.pop();
             }
         }
         
-        return [...new Set(numbers)];
+        combine(0, []);
+        return combinations;
+    }
+    
+    function generateAhkwayNumbers(digitsStr) {
+        const numbers = new Set();
+        const digits = digitsStr.split('');
+        
+        const combos = generateCombinationsFromArray(digits, 2);
+        
+        combos.forEach(combo => {
+            const num1 = parseInt(combo[0] + combo[1]);
+            const num2 = parseInt(combo[1] + combo[0]);
+            numbers.add(num1);
+            numbers.add(num2);
+        });
+        
+        return Array.from(numbers);
+    }
+    
+    function generateKhwayPhuNumbers(digitsStr) {
+        const numbers = new Set();
+        const digits = digitsStr.split('');
+        
+        const combos = generateCombinationsFromArray(digits, 2);
+        
+        combos.forEach(combo => {
+            const num1 = parseInt(combo[0] + combo[1]);
+            const num2 = parseInt(combo[1] + combo[0]);
+            numbers.add(num1);
+            numbers.add(num2);
+        });
+        
+        const uniqueDigits = [...new Set(digits)];
+        uniqueDigits.forEach(digit => {
+            const doubleNum = parseInt(digit + digit);
+            numbers.add(doubleNum);
+        });
+        
+        return Array.from(numbers);
     }
     
     function parseNumberInput(input) {
@@ -714,11 +700,33 @@ document.addEventListener('DOMContentLoaded', function() {
         return parseInt(s.split('').reverse().join(''));
     }
     
+    // ORIGINAL ARRAY INTEGRATION FROM keyboard.js
+    function addBetsToA3Array(numbers, amount, type) {
+        numbers.forEach(num => {
+            addSingleBetToA3Array(num, amount, type);
+        });
+    }
+    
     function addSingleBetToA3Array(num, amount, type) {
-        // Check if a3.js exists
-        if (typeof window.bets === 'undefined') {
-            window.bets = [];
-            window.totalAmount = 0;
+        // Get or create global bets array - ORIGINAL LOGIC FROM keyboard.js
+        let targetBets;
+        let targetTotal;
+        
+        // Check if a3.js variables exist
+        if (typeof bets !== 'undefined') {
+            // Use a3.js local variables
+            targetBets = bets;
+            targetTotal = totalAmount;
+        } else if (window.bets) {
+            // Use window variables
+            targetBets = window.bets;
+            targetTotal = window.totalAmount;
+        } else {
+            // Create new
+            targetBets = [];
+            targetTotal = 0;
+            window.bets = targetBets;
+            window.totalAmount = targetTotal;
         }
         
         const newBet = {
@@ -728,19 +736,28 @@ document.addEventListener('DOMContentLoaded', function() {
             type: type
         };
         
-        window.bets.push(newBet);
-        window.totalAmount += amount;
+        targetBets.push(newBet);
+        targetTotal += amount;
         
-        // Update display through a3.js if it exists
+        // Update both a3.js and window variables
+        if (typeof bets !== 'undefined') {
+            bets = targetBets;
+            totalAmount = targetTotal;
+        }
+        
+        window.bets = targetBets;
+        window.totalAmount = targetTotal;
+        
+        // Update display - ORIGINAL LOGIC
         if (typeof updateDisplay === 'function') {
             updateDisplay();
         } else {
-            // Fallback update
             updateDisplayDirectly();
         }
     }
     
     function updateDisplayDirectly() {
+        const betList = document.getElementById('betList');
         const totalDisplay = document.getElementById('totalAmount');
         const countDisplay = document.getElementById('listCount');
         
@@ -759,7 +776,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="bet-number">${bet.display}</div>
                     <div class="bet-amount">${bet.amount.toLocaleString()}</div>
                     <div class="bet-type">${bet.type}</div>
-                    <button class="delete-btn" onclick="deleteBet(${index})">ဖျက်</button>
+                    <button class="delete-btn" onclick="deleteGlobalBet(${index})">ဖျက်</button>
                 </div>
                 `;
             });
@@ -779,7 +796,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Global delete function that works with a3.js
+    // Global delete function - ORIGINAL FROM keyboard.js
     window.deleteGlobalBet = function(index) {
         if (!confirm('ဖျက်မှာသေချာပါသလား?')) return;
         
@@ -787,6 +804,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const deleted = window.bets[index];
             window.totalAmount -= deleted.amount;
             window.bets.splice(index, 1);
+            
+            // Update a3.js if exists
+            if (typeof bets !== 'undefined') {
+                bets = window.bets;
+                totalAmount = window.totalAmount;
+            }
             
             // Update display
             if (typeof updateDisplay === 'function') {
@@ -797,5 +820,5 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
     
-    console.log('Keyboard.js - Integrated with a3.js loaded successfully');
+    console.log('Keyboard.js - Original style with a3.js integration loaded successfully');
 });
