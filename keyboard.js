@@ -1,29 +1,37 @@
-// keyboard.js - Complete Fixed Version
+// keyboard.js - Laptop Keyboard Version for sale.html
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('keyboard.js - FINAL COMPLETE VERSION');
+    console.log('keyboard.js - LAPTOP KEYBOARD VERSION');
     
-    // DOM Elements
-    const editTxt1 = document.getElementById('editTxt1');
-    const editTxt2 = document.getElementById('editTxt2');
-    const editTxt3 = document.getElementById('editTxt3');
-    const textView = document.getElementById('textView');
+    // DOM Elements from sale.html
+    const editNum1 = document.getElementById('editNum1');
+    const editNum2 = document.getElementById('editNum2');
+    const editNum3 = document.getElementById('editNum3');
+    const textview = document.getElementById('textview');
     const buttonsScrollContainer = document.getElementById('buttonsScrollContainer');
-    const numButtons = document.querySelectorAll('.num-btn');
-    const okButton = document.querySelector('.action-special-btn');
-    const additionalButtons = document.querySelectorAll('.additional-btn');
+    const checkboxButtons = document.querySelectorAll('.checkbox-btn');
+    const cptBtn = document.getElementById('cptBtn');
+    const originalEditArea = document.getElementById('originalEditArea');
     
     // State variables
     let reverseMode = false;
     let isSpecialMode = false;
     let specialType = '';
-    let isComboMode = false;
-    let comboType = '';
+    let selectedTypes = new Set();
+    let currentField = editNum1;
     
     // Special cases definitions
     const specialCases = {
+        'R': [], // R is handled specially
+        'အပါ': [0, 11, 22, 33, 44, 55, 66, 77, 88, 99],
+        'ထိပ်': [], // Requires 1 digit input
+        'ပိတ်': [], // Requires 1 digit input
+        'ဘရိတ်': [], // Requires 1 digit input (sum of digits)
         'အပူး': [0, 11, 22, 33, 44, 55, 66, 77, 88, 99],
         'ပါဝါ': [5, 16, 27, 38, 49, 50, 61, 72, 83, 94],
         'နက္ခ': [7, 18, 24, 35, 42, 53, 69, 70, 81, 96],
+        'အခွေ': [], // Requires multiple digits
+        'ခွေပူး': [], // Requires multiple digits
+        'K': [], // Requires 1 digit input
         'ညီကို': [1, 12, 23, 34, 45, 56, 67, 78, 89, 90],
         'ကိုညီ': [9, 10, 21, 32, 43, 54, 65, 76, 87, 98],
         'ညီကိုR': [1, 12, 23, 34, 45, 56, 67, 78, 89, 90, 9, 10, 21, 32, 43, 54, 65, 76, 87, 98],
@@ -32,708 +40,594 @@ document.addEventListener('DOMContentLoaded', function() {
         'စုံမ': [1, 3, 5, 7, 9, 21, 23, 25, 27, 29, 41, 43, 45, 47, 49, 61, 63, 65, 67, 69, 81, 83, 85, 87, 89],
         'မစုံ': [10, 12, 14, 16, 18, 30, 32, 34, 36, 38, 50, 52, 54, 56, 58, 70, 72, 74, 76, 78, 90, 92, 94, 96, 98],
         'စုံပူး': [0, 22, 44, 66, 88],
-        'မပူး': [11, 33, 55, 77, 99]
+        'မပူး': [11, 33, 55, 77, 99],
+        'စုံကပ်': [], // Requires 1 digit input
+        'မကပ်': [], // Requires 1 digit input
+        'စုံကပ်R': [], // Requires 1 digit input
+        'မကပ်R': [], // Requires 1 digit input
+        'ကပ်': [] // Requires 1 digit input
+    };
+    
+    // Function keys mapping
+    const functionKeys = {
+        'F9': 'ထိပ်',
+        'F8': 'ပိတ်',
+        'F6': 'အပါ',
+        'F7': 'အပူး',
+        'F12': 'ဘရိတ်',
+        'F11': 'ပါဝါ',
+        'F10': 'နက္ခ'
     };
     
     // Initialize
-    resetFields();
     setupEventListeners();
+    resetFields();
     
     function resetFields() {
-        editTxt1.textContent = 'ဂဏန်း';
-        editTxt2.textContent = 'ယူနစ်';
-        editTxt3.style.display = 'none';
-        editTxt3.textContent = '';
-        textView.textContent = '';
+        editNum1.value = '';
+        editNum2.value = '';
+        editNum3.value = '';
+        editNum3.style.display = 'none'; // Hide reverse field initially
+        textview.textContent = '-';
+        
         reverseMode = false;
         isSpecialMode = false;
         specialType = '';
-        isComboMode = false;
-        comboType = '';
-        highlightField(editTxt1);
+        selectedTypes.clear();
         
-        setTimeout(() => {
-            if (buttonsScrollContainer) {
-                buttonsScrollContainer.scrollTop = 0;
+        // Reset checkbox buttons
+        checkboxButtons.forEach(btn => {
+            btn.classList.remove('checked');
+        });
+        
+        // Reset textview styling
+        textview.style.borderColor = '#3498db';
+        textview.style.backgroundColor = 'white';
+        
+        // Set focus to first field
+        setCurrentField(editNum1);
+    }
+    
+    function setCurrentField(field) {
+        currentField = field;
+        
+        // Remove highlights from all fields
+        [editNum1, editNum2, editNum3].forEach(f => {
+            f.style.borderColor = '#3498db';
+            f.style.backgroundColor = 'white';
+        });
+        textview.style.borderColor = '#3498db';
+        textview.style.backgroundColor = 'white';
+        
+        // Highlight current field
+        field.style.borderColor = '#2ecc71';
+        field.style.backgroundColor = '#e8f8f5';
+        
+        // Focus on input field
+        if (field !== textview) {
+            field.focus();
+            field.select();
+        }
+    }
+    
+    function setupEventListeners() {
+        // Input field focus events
+        editNum1.addEventListener('focus', () => setCurrentField(editNum1));
+        editNum2.addEventListener('focus', () => setCurrentField(editNum2));
+        editNum3.addEventListener('focus', () => setCurrentField(editNum3));
+        textview.addEventListener('click', () => setCurrentField(textview));
+        
+        // Input field keyboard events
+        editNum1.addEventListener('keydown', handleKeyboardInput);
+        editNum2.addEventListener('keydown', handleKeyboardInput);
+        editNum3.addEventListener('keydown', handleKeyboardInput);
+        
+        // Checkbox buttons
+        checkboxButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                handleCheckboxButton(this);
+            });
+        });
+        
+        // CPT button toggle
+        cptBtn.addEventListener('click', function() {
+            const inputFrame = document.getElementById('inputFrame');
+            
+            if (buttonsScrollContainer.style.display === 'none' || buttonsScrollContainer.style.display === '') {
+                // Switch to keyboard view
+                cptBtn.textContent = 'CopyPate';
+                inputFrame.style.display = 'block';
+                buttonsScrollContainer.style.display = 'block';
+                originalEditArea.style.display = 'none';
+                setCurrentField(editNum1);
+            } else {
+                // Switch to textarea view
+                cptBtn.textContent = 'Keyboard';
+                inputFrame.style.display = 'none';
+                buttonsScrollContainer.style.display = 'none';
+                originalEditArea.style.display = 'flex';
             }
-        }, 10);
-    }
-    
-    function removeHighlights() {
-        editTxt1.style.borderColor = '#ddd';
-        editTxt1.style.backgroundColor = '#f8f9fa';
-        editTxt2.style.borderColor = '#ddd';
-        editTxt2.style.backgroundColor = '#f8f9fa';
-        editTxt3.style.borderColor = '#ddd';
-        editTxt3.style.backgroundColor = '#f8f9fa';
-        textView.style.borderColor = '#ddd';
-        textView.style.backgroundColor = '#f8f9fa';
-    }
-    
-    function highlightField(field) {
-        removeHighlights();
-        field.style.borderColor = '#3498db';
-        field.style.backgroundColor = '#e3f2fd';
+        });
         
-        if (field === editTxt2 || field === editTxt3) {
+        // Global keyboard shortcuts
+        document.addEventListener('keydown', handleGlobalKeyboard);
+    }
+    
+    function handleGlobalKeyboard(e) {
+        // Function keys for special types
+        if (functionKeys[e.key]) {
+            e.preventDefault();
+            handleFunctionKey(functionKeys[e.key]);
+            return;
+        }
+        
+        // Slash (/) key for R mode
+        if (e.key === '/' && currentField === editNum2) {
+            e.preventDefault();
+            handleSlashKey();
+            return;
+        }
+        
+        // Backspace for delete
+        if (e.key === 'Backspace' && currentField === textview) {
+            e.preventDefault();
+            handleDelete();
+            return;
+        }
+        
+        // Enter key processing
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            handleEnterKey();
+            return;
+        }
+    }
+    
+    function handleKeyboardInput(e) {
+        // Only allow numbers and some special keys
+        const allowedKeys = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 
+                            'Backspace', 'Tab', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
+                            'Delete', 'Home', 'End'];
+        
+        if (!allowedKeys.includes(e.key) && 
+            !(e.ctrlKey && ['a', 'c', 'v', 'x'].includes(e.key)) &&
+            !(e.key.length === 1 && /[0-9]/.test(e.key))) {
+            e.preventDefault();
+            return;
+        }
+        
+        // Auto-advance logic for editNum1
+        if (e.target === editNum1 && e.key.length === 1 && /[0-9]/.test(e.key)) {
             setTimeout(() => {
-                if (buttonsScrollContainer) {
-                    buttonsScrollContainer.scrollTop = 0;
+                if (shouldAutoAdvance(editNum1)) {
+                    if (selectedTypes.size === 0) {
+                        // Regular number - move to amount after 2 digits
+                        if (editNum1.value.length >= 2) {
+                            setCurrentField(editNum2);
+                        }
+                    } else {
+                        // Special mode - check if needs digit
+                        const needsDigit = needsDigitInput();
+                        if (needsDigit) {
+                            // For 1-digit special types
+                            const maxLength = getMaxLengthForField(editNum1);
+                            if (editNum1.value.length >= maxLength) {
+                                setCurrentField(editNum2);
+                            }
+                        } else {
+                            // For no-digit special types, number field might be empty or optional
+                            if (editNum1.value.length >= 2) {
+                                setCurrentField(editNum2);
+                            }
+                        }
+                    }
                 }
             }, 10);
         }
     }
     
-    function setupEventListeners() {
-        // Number buttons (0-9, 00)
-        numButtons.forEach(button => {
-            const text = button.textContent;
+    function handleFunctionKey(type) {
+        // Clear all selections first
+        selectedTypes.clear();
+        checkboxButtons.forEach(btn => {
+            btn.classList.remove('checked');
+        });
+        
+        // Add the selected type
+        selectedTypes.add(type);
+        const button = document.querySelector(`[data-type="${type}"]`);
+        if (button) {
+            button.classList.add('checked');
+        }
+        
+        updateTextView();
+        
+        // Set focus based on type
+        const needsDigit = ['အပါ', 'ထိပ်', 'ပိတ်', 'ဘရိတ်'].includes(type);
+        if (needsDigit) {
+            setCurrentField(editNum1);
+        } else {
+            setCurrentField(editNum2);
+        }
+    }
+    
+    function handleSlashKey() {
+        // Only allow / when in editNum2 field
+        if (currentField !== editNum2) return;
+        
+        // Check if R is allowed (only for regular bets)
+        if (selectedTypes.size > 0 && !selectedTypes.has('R')) {
+            // Check if allowed types for R
+            const allowedWithR = ['ထိပ်', 'ပိတ်'];
+            const hasAllowedType = Array.from(selectedTypes).some(type => allowedWithR.includes(type));
             
-            if (text !== 'R' && text !== 'အပါ' && text !== 'OK' && text !== 'DEL') {
-                button.addEventListener('click', function() {
-                    addDigitToField(text);
-                });
+            if (!hasAllowedType) {
+                alert('R ကို ထိပ်နှင့် ပိတ်နှင့်သာ အသုံးပြုနိုင်ပါသည်');
+                return;
             }
-        });
-        
-        // R button
-        const rButton = document.querySelector('.num-btn.special-btn');
-        if (rButton && rButton.textContent === 'R') {
-            rButton.addEventListener('click', function() {
-                // Check if R button should be allowed
-                if (isSpecialMode) {
-                    // Allow R only for ထိပ် and ပိတ်
-                    if (specialType !== 'ထိပ်' && specialType !== 'ပိတ်') {
-                        alert('R နှိပ်လို့မရပါ');
-                        return;
-                    }
-                }
-                
-                if (editTxt1.textContent === 'ဂဏန်း' || editTxt1.textContent === '') {
-                    alert('ဂဏန်းထည့်ပါ');
-                    highlightField(editTxt1);
-                    return;
-                }
-                
-                if (editTxt2.textContent === 'ယူနစ်' || editTxt2.textContent === '') {
-                    alert('ငွေပမာဏထည့်ပါ');
-                    highlightField(editTxt2);
-                    return;
-                }
-                
-                reverseMode = true;
-                textView.textContent = textView.textContent + ' R';
-                editTxt3.style.display = 'block';
-                editTxt3.textContent = '';
-                
-                highlightField(editTxt3);
-                
-                setTimeout(() => {
-                    if (buttonsScrollContainer) {
-                        buttonsScrollContainer.scrollTop = 0;
-                    }
-                }, 10);
-            });
         }
         
-        // အပါ button
-        const apalButton = Array.from(numButtons).find(btn => btn.textContent === 'အပါ');
-        if (apalButton) {
-            apalButton.addEventListener('click', function() {
-                isSpecialMode = true;
-                isComboMode = false;
+        // Toggle R mode
+        if (!selectedTypes.has('R')) {
+            selectedTypes.add('R');
+            const rButton = document.querySelector('[data-type="R"]');
+            if (rButton) {
+                rButton.classList.add('checked');
+            }
+            updateTextView();
+        }
+        
+        // Show reverse amount field
+        editNum3.style.display = 'block';
+        reverseMode = true;
+        setCurrentField(editNum3);
+    }
+    
+    function handleCheckboxButton(button) {
+        const type = button.getAttribute('data-type');
+        
+        // Toggle selection
+        if (button.classList.contains('checked')) {
+            button.classList.remove('checked');
+            selectedTypes.delete(type);
+            
+            // If R was unchecked, hide reverse field
+            if (type === 'R') {
+                editNum3.style.display = 'none';
                 reverseMode = false;
-                specialType = 'အပါ';
-                comboType = '';
-                
-                textView.textContent = 'အပါ';
-                editTxt1.textContent = '';
-                editTxt3.style.display = 'none';
-                highlightField(editTxt1);
-                
-                setTimeout(() => {
-                    if (buttonsScrollContainer) {
-                        buttonsScrollContainer.scrollTop = 0;
+                editNum3.value = '';
+            }
+        } else {
+            // If it's R, remove other R-related types
+            if (type === 'R') {
+                ['R', 'ညီကိုR', 'စုံကပ်R', 'မကပ်R'].forEach(t => {
+                    if (selectedTypes.has(t)) {
+                        selectedTypes.delete(t);
+                        document.querySelector(`[data-type="${t}"]`)?.classList.remove('checked');
                     }
-                }, 10);
-            });
+                });
+                
+                // Show reverse field
+                editNum3.style.display = 'block';
+                reverseMode = true;
+            }
+            
+            button.classList.add('checked');
+            selectedTypes.add(type);
         }
         
-        // DELETE button
-        const delButton = Array.from(numButtons).find(btn => btn.textContent === 'DEL');
-        if (delButton) {
-            delButton.addEventListener('click', function() {
-                handleDelete();
-            });
+        updateTextView();
+        
+        // Auto-set focus based on selection
+        if (type === 'R') {
+            setCurrentField(editNum3);
+        } else if (needsDigitInputForType(type)) {
+            setCurrentField(editNum1);
+        } else {
+            setCurrentField(editNum2);
         }
-        
-        // Additional buttons (ထိပ်, ပိတ်, အပူး, etc.)
-        additionalButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                handleAdditionalButton(this.textContent);
-            });
-        });
-        
-        // OK button
-        if (okButton) {
-            okButton.addEventListener('click', function() {
-                processOKButton();
-            });
-        }
-        
-        // Field click handlers
-        editTxt1.addEventListener('click', () => highlightField(editTxt1));
-        editTxt2.addEventListener('click', () => highlightField(editTxt2));
-        editTxt3.addEventListener('click', () => highlightField(editTxt3));
-        textView.addEventListener('click', () => highlightField(textView));
     }
     
     function handleDelete() {
-        let currentField;
-        
-        if (editTxt1.style.borderColor === 'rgb(52, 152, 219)') {
-            currentField = editTxt1;
-        } else if (editTxt2.style.borderColor === 'rgb(52, 152, 219)') {
-            currentField = editTxt2;
-        } else if (editTxt3.style.borderColor === 'rgb(52, 152, 219)') {
-            currentField = editTxt3;
-        } else if (textView.style.borderColor === 'rgb(52, 152, 219)') {
-            currentField = textView;
-        } else {
-            currentField = editTxt1;
-        }
-        
-        if (currentField === editTxt1 && editTxt1.textContent !== 'ဂဏန်း' && editTxt1.textContent.length > 0) {
-            editTxt1.textContent = editTxt1.textContent.slice(0, -1);
-            if (editTxt1.textContent === '') {
-                editTxt1.textContent = 'ဂဏန်း';
-            }
-        } 
-        else if (currentField === editTxt2 && editTxt2.textContent !== 'ယူနစ်' && editTxt2.textContent.length > 0) {
-            editTxt2.textContent = editTxt2.textContent.slice(0, -1);
-            if (editTxt2.textContent === '') {
-                editTxt2.textContent = 'ယူနစ်';
-            }
-        }
-        else if (currentField === editTxt3 && editTxt3.textContent.length > 0) {
-            editTxt3.textContent = editTxt3.textContent.slice(0, -1);
-        }
-        // FIXED: textView ကို select လုပ်ထားရင် delete လုပ်လို့ရအောင်
-        else if (currentField === textView && textView.textContent.length > 0) {
-            textView.textContent = '';
+        if (currentField === textview) {
+            // Clear selected types
+            selectedTypes.clear();
+            checkboxButtons.forEach(btn => {
+                btn.classList.remove('checked');
+            });
+            updateTextView();
+            editNum3.style.display = 'none';
             reverseMode = false;
-            isSpecialMode = false;
-            isComboMode = false;
-            specialType = '';
-            comboType = '';
+            editNum3.value = '';
+            return;
         }
+        
+        // For input fields, let default backspace handle it
     }
     
-    function handleAdditionalButton(buttonText) {
-        reverseMode = false;
-        isSpecialMode = true;
-        isComboMode = false;
-        specialType = buttonText;
-        comboType = '';
-        editTxt3.style.display = 'none';
-        
-        editTxt1.textContent = '';
-        editTxt2.textContent = 'ယူနစ်';
-        editTxt3.textContent = '';
-        
-        // Combo modes
-        if (buttonText === 'အခွေ' || buttonText === 'ခွေပူး') {
-            isComboMode = true;
-            comboType = buttonText;
-            isSpecialMode = false;
-            textView.textContent = buttonText;
-            highlightField(editTxt1);
-        }
-        // Special modes that need 1 digit
-        else if (buttonText === 'အပါ' || buttonText === 'ထိပ်' || buttonText === 'ပိတ်' || 
-                 buttonText === 'ဘရိတ်' || buttonText === 'စုံကပ်' || buttonText === 'မကပ်' || 
-                 buttonText === 'စုံကပ်R' || buttonText === 'မကပ်R' || buttonText === 'ကပ်') {
-            textView.textContent = buttonText;
-            highlightField(editTxt1);
-        }
-        // Special modes that don't need digit
-        else if (buttonText === 'အပူး' || buttonText === 'ညီကို' || buttonText === 'ကိုညီ' || 
-                 buttonText === 'ညီကိုR' || buttonText === 'ပါဝါ' || buttonText === 'နက္ခ' ||
-                 buttonText === 'စုံစုံ' || buttonText === 'မမ' || buttonText === 'စုံမ' || 
-                 buttonText === 'မစုံ' || buttonText === 'စုံပူး' || buttonText === 'မပူး') {
-            textView.textContent = buttonText;
-            highlightField(editTxt2);
-        }
-        // K button
-        else if (buttonText === 'K') {
-            textView.textContent = 'K';
-            highlightField(editTxt1);
-        }
-        
-        setTimeout(() => {
-            if (buttonsScrollContainer) {
-                buttonsScrollContainer.scrollTop = 0;
+    function handleEnterKey() {
+        // Process based on current field
+        if (currentField === editNum1) {
+            // Move to next field
+            if (editNum1.value.length > 0) {
+                setCurrentField(editNum2);
             }
-        }, 10);
+        } else if (currentField === editNum2) {
+            // Check if we should process or move to reverse
+            if (reverseMode && editNum3.style.display !== 'none') {
+                setCurrentField(editNum3);
+            } else {
+                // Process the bet
+                processBet();
+            }
+        } else if (currentField === editNum3) {
+            // Process the bet
+            processBet();
+        }
     }
     
-    function addDigitToField(digit) {
-        let currentField;
+    function processBet() {
+        // Validate and process the bet
+        if (!validateInputs()) {
+            return;
+        }
         
-        if (editTxt1.style.borderColor === 'rgb(52, 152, 219)') {
-            currentField = editTxt1;
-        } else if (editTxt2.style.borderColor === 'rgb(52, 152, 219)') {
-            currentField = editTxt2;
-        } else if (editTxt3.style.borderColor === 'rgb(52, 152, 219)') {
-            currentField = editTxt3;
-        } else if (textView.style.borderColor === 'rgb(52, 152, 219)') {
-            currentField = textView;
+        // Get amount (multiply by 100 for unit)
+        const unitAmount = parseInt(editNum2.value);
+        const amount = unitAmount * 100;
+        
+        // Get reverse amount if exists
+        let reverseAmount = amount;
+        if (reverseMode && editNum3.value) {
+            const reverseUnit = parseInt(editNum3.value);
+            reverseAmount = reverseUnit * 100;
+        }
+        
+        // Process based on selected types
+        if (selectedTypes.size === 0) {
+            // Regular bet
+            processRegularBet(amount, reverseAmount);
+        } else if (hasSpecialTypeWithoutDigit()) {
+            processSpecialModeNoDigit(amount);
+        } else if (hasSpecialTypeWithDigit()) {
+            processSpecialModeWithDigit(amount, reverseAmount);
         } else {
-            currentField = editTxt1;
+            processRegularBet(amount, reverseAmount);
         }
         
-        if (currentField === editTxt1 && editTxt1.textContent === 'ဂဏန်း') {
-            editTxt1.textContent = '';
-        } else if (currentField === editTxt2 && editTxt2.textContent === 'ယူနစ်') {
-            editTxt2.textContent = '';
-        } else if (currentField === editTxt3 && editTxt3.textContent === '') {
-            editTxt3.textContent = '';
-        }
-        
-        if (currentField === editTxt1) {
-            let maxLength = 2;
-            
-            if (isComboMode && (comboType === 'အခွေ' || comboType === 'ခွေပူး')) {
-                maxLength = 10;
-                // FIXED: အခွေ/ခွေပူးမှာ 2လုံးပြည့်လည်း auto မသွားရဘူး
-            } else if (isSpecialMode && (specialType === 'အပါ' || specialType === 'ထိပ်' || 
-                       specialType === 'ပိတ်' || specialType === 'ဘရိတ်' || 
-                       specialType === 'စုံကပ်' || specialType === 'မကပ်' || 
-                       specialType === 'စုံကပ်R' || specialType === 'မကပ်R' || specialType === 'ကပ်')) {
-                maxLength = 1;
-            }
-            
-            if (editTxt1.textContent.length < maxLength) {
-                editTxt1.textContent += digit;
-            }
-            
-            // Auto move to amount field
-            if (isSpecialMode && (specialType === 'အပါ' || specialType === 'ထိပ်' || 
-                specialType === 'ပိတ်' || specialType === 'ဘရိတ်' || 
-                specialType === 'စုံကပ်' || specialType === 'မကပ်' || 
-                specialType === 'စုံကပ်R' || specialType === 'မကပ်R' || specialType === 'ကပ်')) {
-                if (editTxt1.textContent.length >= 1) {
-                    highlightField(editTxt2);
-                    setTimeout(() => {
-                        if (buttonsScrollContainer) {
-                            buttonsScrollContainer.scrollTop = 0;
-                        }
-                    }, 10);
-                }
-            }
-            // FIXED: အခွေ/ခွေပူးမှာ auto move မလုပ်ရ
-            else if (isComboMode && (comboType === 'အခွေ' || comboType === 'ခွေပူး')) {
-                // Do NOT auto move for combo modes
-                // User must manually click on amount field
-            }
-            // Regular mode auto move
-            else if (!isSpecialMode && !isComboMode && editTxt1.textContent.length >= 2) {
-                highlightField(editTxt2);
-                setTimeout(() => {
-                    if (buttonsScrollContainer) {
-                        buttonsScrollContainer.scrollTop = 0;
-                    }
-                }, 10);
-            }
-        } 
-        else if (currentField === editTxt2 && editTxt2.textContent.length < 7) {
-            editTxt2.textContent += digit;
-        }
-        else if (currentField === editTxt3 && editTxt3.textContent.length < 7) {
-            editTxt3.textContent += digit;
-        }
-        else if (currentField === textView) {
-            // Can't add digits to textView
-            return;
-        }
-    }
-    
-    function processOKButton() {
-        // Combo modes (အခွေ, ခွေပူး)
-        if (isComboMode) {
-            processComboMode();
-            return;
-        }
-        
-        // Special modes that don't need digit
-        if (isSpecialMode && specialCases[specialType]) {
-            processSpecialModeNoDigit();
-            return;
-        }
-        
-        // Special modes that need 1 digit - including ထိပ် and ပိတ်
-        if (isSpecialMode && (specialType === 'အပါ' || specialType === 'ထိပ်' || 
-            specialType === 'ပိတ်' || specialType === 'ဘရိတ်' || 
-            specialType === 'စုံကပ်' || specialType === 'မကပ်' || 
-            specialType === 'စုံကပ်R' || specialType === 'မကပ်R' || specialType === 'ကပ်')) {
-            processSpecialModeWithDigit();
-            return;
-        }
-        
-        // Regular bet with/without reverse
-        processRegularBet();
-    }
-    
-    function processComboMode() {
-        const digitsStr = editTxt1.textContent;
-        if (digitsStr === 'ဂဏန်း' || digitsStr === '' || digitsStr.length < 2) {
-            alert('ဂဏန်းနှစ်လုံး (သို့) အထက်ထည့်ပါ');
-            highlightField(editTxt1);
-            return;
-        }
-        
-        const amountText = editTxt2.textContent;
-        if (amountText === 'ယူနစ်' || amountText === '') {
-            alert('ငွေပမာဏထည့်ပါ');
-            highlightField(editTxt2);
-            return;
-        }
-        
-        const amount = parseInt(amountText.replace(/[^0-9]/g, ''));
-        if (isNaN(amount) || amount < 100) {
-            alert('ငွေပမာဏမှားယွင်းနေပါသည် (အနည်းဆုံး 100)');
-            highlightField(editTxt2);
-            return;
-        }
-        
-        let numbers;
-        if (comboType === 'အခွေ') {
-            numbers = generateAhkwayNumbers(digitsStr);
-        } else if (comboType === 'ခွေပူး') {
-            numbers = generateKhwayPhuNumbers(digitsStr);
-        }
-        
-        if (numbers && numbers.length > 0) {
-            addBetsToGlobalArray(numbers, amount, comboType);
-            resetFields();
-        }
-    }
-    
-    function processSpecialModeNoDigit() {
-        const amountText = editTxt2.textContent;
-        if (amountText === 'ယူနစ်' || amountText === '') {
-            alert('ငွေပမာဏထည့်ပါ');
-            highlightField(editTxt2);
-            return;
-        }
-        
-        const amount = parseInt(amountText.replace(/[^0-9]/g, ''));
-        if (isNaN(amount) || amount < 100) {
-            alert('ငွေပမာဏမှားယွင်းနေပါသည် (အနည်းဆုံး 100)');
-            highlightField(editTxt2);
-            return;
-        }
-        
-        const numbers = specialCases[specialType];
-        addBetsToGlobalArray(numbers, amount, specialType);
+        // Reset and focus on first field
         resetFields();
     }
     
-    function processSpecialModeWithDigit() {
-        const digitStr = editTxt1.textContent;
-        if (digitStr === 'ဂဏန်း' || digitStr === '') {
-            alert('ဂဏန်းထည့်ပါ');
-            highlightField(editTxt1);
-            return;
+    function validateInputs() {
+        // Check number field
+        if (editNum1.value === '') {
+            if (needsDigitInput()) {
+                alert('ဂဏန်းထည့်ပါ');
+                setCurrentField(editNum1);
+                return false;
+            }
+        } else {
+            const num = parseInt(editNum1.value);
+            if (isNaN(num)) {
+                alert('ဂဏန်းမှားယွင်းနေပါသည်');
+                setCurrentField(editNum1);
+                return false;
+            }
         }
         
-        const digit = parseInt(digitStr);
-        if (isNaN(digit) || digit < 0 || digit > 9) {
-            alert('ဂဏန်းမှားယွင်းနေပါသည် (0-9)');
-            highlightField(editTxt1);
-            return;
+        // Check amount field
+        if (editNum2.value === '') {
+            alert('ယူနစ်ထည့်ပါ');
+            setCurrentField(editNum2);
+            return false;
         }
         
-        const amountText = editTxt2.textContent;
-        if (amountText === 'ယူနစ်' || amountText === '') {
-            alert('ငွေပမာဏထည့်ပါ');
-            highlightField(editTxt2);
-            return;
+        const unit = parseInt(editNum2.value);
+        if (isNaN(unit) || unit < 1) {
+            alert('ယူနစ်မှားယွင်းနေပါသည်');
+            setCurrentField(editNum2);
+            return false;
         }
         
-        const amount = parseInt(amountText.replace(/[^0-9]/g, ''));
-        if (isNaN(amount) || amount < 100) {
-            alert('ငွေပမာဏမှားယွင်းနေပါသည် (အနည်းဆုံး 100)');
-            highlightField(editTxt2);
-            return;
-        }
-        
-        let reverseAmount = amount;
-        if (reverseMode) {
-            const reverseAmountText = editTxt3.textContent;
-            if (reverseAmountText !== '') {
-                reverseAmount = parseInt(reverseAmountText.replace(/[^0-9]/g, ''));
-                if (isNaN(reverseAmount) || reverseAmount < 100) {
-                    alert('အာယူနစ်မှားယွင်းနေပါသည် (အနည်းဆုံး 100)');
-                    highlightField(editTxt3);
-                    return;
+        // Check reverse amount if in R mode
+        if (reverseMode && editNum3.style.display !== 'none') {
+            if (editNum3.value === '') {
+                // Use main amount if reverse amount not specified
+                editNum3.value = editNum2.value;
+            } else {
+                const reverseUnit = parseInt(editNum3.value);
+                if (isNaN(reverseUnit) || reverseUnit < 1) {
+                    alert('အာယူနစ်မှားယွင်းနေပါသည်');
+                    setCurrentField(editNum3);
+                    return false;
                 }
             }
         }
         
-        let numbers = [];
-        if (specialType === 'အပါ') {
-            numbers = generateApalNumbers(digit);
-        } else if (specialType === 'ထိပ်') {
-            if (!reverseMode) {
-                numbers = generateFrontNumbers(digit);
-            } else {
-                // For ထိပ် with R - main bet is front, reverse is back
-                const frontNumbers = generateFrontNumbers(digit);
-                const backNumbers = generateBackNumbers(digit);
-                
-                // Add main bets (front numbers)
-                addBetsToGlobalArray(frontNumbers, amount, 'ထိပ်');
-                
-                // Add reverse bets (back numbers)
-                addBetsToGlobalArray(backNumbers, reverseAmount, 'ပိတ်');
-                
-                resetFields();
-                return;
-            }
-        } else if (specialType === 'ပိတ်') {
-            if (!reverseMode) {
-                numbers = generateBackNumbers(digit);
-            } else {
-                // For ပိတ် with R - main bet is back, reverse is front
-                const backNumbers = generateBackNumbers(digit);
-                const frontNumbers = generateFrontNumbers(digit);
-                
-                // Add main bets (back numbers)
-                addBetsToGlobalArray(backNumbers, amount, 'ပိတ်');
-                
-                // Add reverse bets (front numbers)
-                addBetsToGlobalArray(frontNumbers, reverseAmount, 'ထိပ်');
-                
-                resetFields();
-                return;
-            }
-        } else if (specialType === 'ဘရိတ်') {
-            numbers = generateBreakNumbers(digit);
-        } else if (specialType === 'စုံကပ်') {
-            numbers = generateEvenKhatNumbers(digit);
-        } else if (specialType === 'မကပ်') {
-            numbers = generateOddKhatNumbers(digit);
-        } else if (specialType === 'စုံကပ်R') {
-            numbers = generateEvenKhatRNumbers(digit);
-        } else if (specialType === 'မကပ်R') {
-            numbers = generateOddKhatRNumbers(digit);
-        } else if (specialType === 'ကပ်') {
-            numbers = generateKhatNumbers(digit);
-        }
-        
-        if (!reverseMode) {
-            if (numbers.length > 0) {
-                addBetsToGlobalArray(numbers, amount, specialType);
-                resetFields();
-            }
-        } else {
-            // For other special modes with R (only allowed for ထိပ် and ပိတ် which are handled above)
-            // This shouldn't be reached since we blocked R for other modes
-            addBetsToGlobalArray(numbers, amount, specialType + ' (Main)');
-            
-            // Add reverse bets - generate reverse numbers based on the special type
-            let reverseNumbers = [];
-            if (specialType === 'အပါ') {
-                // For အပါ, reverse would be the same numbers
-                reverseNumbers = numbers;
-            } else if (specialType === 'ဘရိတ်') {
-                // For ဘရိတ်, reverse is the same since it's based on sum
-                reverseNumbers = numbers;
-            }
-            // Add other special types as needed
-            
-            if (reverseNumbers.length > 0) {
-                addBetsToGlobalArray(reverseNumbers, reverseAmount, specialType + ' (R)');
-            }
-            
-            resetFields();
-        }
+        return true;
     }
     
-    function processRegularBet() {
-        const numberText = editTxt1.textContent;
-        if (numberText === 'ဂဏန်း' || numberText === '') {
+    function processRegularBet(amount, reverseAmount) {
+        const numberInput = editNum1.value;
+        
+        if (numberInput === '') {
             alert('ဂဏန်းထည့်ပါ');
-            highlightField(editTxt1);
+            setCurrentField(editNum1);
             return;
         }
         
-        const amountText = editTxt2.textContent;
-        if (amountText === 'ယူနစ်' || amountText === '') {
-            alert('ငွေပမာဏထည့်ပါ');
-            highlightField(editTxt2);
-            return;
-        }
-        
-        const amount = parseInt(amountText.replace(/[^0-9]/g, ''));
-        if (isNaN(amount) || amount < 100) {
-            alert('ငွေပမာဏမှားယွင်းနေပါသည် (အနည်းဆုံး 100)');
-            highlightField(editTxt2);
-            return;
-        }
-        
-        let reverseAmount = amount;
-        if (reverseMode) {
-            const reverseAmountText = editTxt3.textContent;
-            if (reverseAmountText !== '') {
-                reverseAmount = parseInt(reverseAmountText.replace(/[^0-9]/g, ''));
-                if (isNaN(reverseAmount) || reverseAmount < 100) {
-                    alert('အာယူနစ်မှားယွင်းနေပါသည် (အနည်းဆုံး 100)');
-                    highlightField(editTxt3);
-                    return;
-                }
-            }
-        }
-        
-        const numbers = parseNumberInput(numberText);
+        const numbers = parseNumberInput(numberInput);
         if (numbers.length === 0) {
             alert('ဂဏန်းမှားယွင်းနေပါသည်');
-            highlightField(editTxt1);
+            setCurrentField(editNum1);
             return;
         }
         
         if (!reverseMode) {
-            addBetsToGlobalArray(numbers, amount, 'Regular');
-        } else {
-            // Add main bets
-            addBetsToGlobalArray(numbers, amount, 'Reverse(M)');
-            
-            // Add reverse bets
+            // Regular bet without reverse
             numbers.forEach(num => {
+                addSingleBetToGlobalArray(num, amount, 'Regular');
+            });
+        } else {
+            // Regular bet with reverse
+            numbers.forEach(num => {
+                // Main bet
+                addSingleBetToGlobalArray(num, amount, 'Reverse(M)');
+                
+                // Reverse bet
                 const revNum = reverseNumber(num);
                 if (revNum !== num) {
                     addSingleBetToGlobalArray(revNum, reverseAmount, 'Reverse(R)');
                 }
             });
         }
-        
-        resetFields();
     }
     
-    // Helper functions
-    function addBetsToGlobalArray(numbers, amount, type) {
-        numbers.forEach(num => {
-            addSingleBetToGlobalArray(num, amount, type);
-        });
-    }
-    
-    function addSingleBetToGlobalArray(num, amount, type) {
-        // Get or create global bets array
-        let targetBets;
-        let targetTotal;
+    function processSpecialModeNoDigit(amount) {
+        const specialType = Array.from(selectedTypes).find(type => 
+            ['အပူး', 'ပါဝါ', 'နက္ခ', 'ညီကို', 'ကိုညီ', 'ညီကိုR', 
+             'စုံစုံ', 'မမ', 'စုံမ', 'မစုံ', 'စုံပူး', 'မပူး'].includes(type));
         
-        if (typeof bets !== 'undefined') {
-            // Use a3.js local variable
-            targetBets = bets;
-            targetTotal = totalAmount;
-        } else if (window.bets) {
-            // Use window variable
-            targetBets = window.bets;
-            targetTotal = window.totalAmount;
-        } else {
-            // Create new
-            targetBets = [];
-            targetTotal = 0;
-            window.bets = targetBets;
-            window.totalAmount = targetTotal;
-        }
-        
-        const newBet = {
-            number: num,
-            amount: amount,
-            display: num.toString().padStart(2, '0'),
-            type: type
-        };
-        
-        targetBets.push(newBet);
-        targetTotal += amount;
-        
-        // Update both a3.js and window variables
-        if (typeof bets !== 'undefined') {
-            bets = targetBets;
-            totalAmount = targetTotal;
-        }
-        
-        window.bets = targetBets;
-        window.totalAmount = targetTotal;
-        
-        // Update display
-        if (typeof updateDisplay === 'function') {
-            updateDisplay();
-        } else {
-            updateDisplayDirectly();
-        }
-    }
-    
-    function updateDisplayDirectly() {
-        const betList = document.getElementById('betList');
-        const totalDisplay = document.getElementById('totalAmount');
-        const countDisplay = document.getElementById('listCount');
-        
-        if (!betList || !totalDisplay || !countDisplay) return;
-        
-        const currentBets = window.bets || [];
-        const currentTotal = window.totalAmount || 0;
-        
-        if (currentBets.length === 0) {
-            betList.innerHTML = '<div class="empty-message">လောင်းကြေးမရှိသေးပါ</div>';
-        } else {
-            let html = '';
-            currentBets.forEach((bet, index) => {
-                html += `
-                <div class="bet-item">
-                    <div class="bet-number">${bet.display}</div>
-                    <div class="bet-amount">${bet.amount.toLocaleString()}</div>
-                    <div class="bet-type">${bet.type}</div>
-                    <button class="delete-btn" onclick="deleteGlobalBet(${index})">ဖျက်</button>
-                </div>
-                `;
+        if (specialType && specialCases[specialType]) {
+            const numbers = specialCases[specialType];
+            numbers.forEach(num => {
+                addSingleBetToGlobalArray(num, amount, specialType);
             });
-            betList.innerHTML = html;
         }
-        
-        totalDisplay.textContent = currentTotal.toLocaleString();
-        countDisplay.textContent = currentBets.length;
     }
     
-    function parseNumberInput(input) {
-        const numbers = [];
-        const cleanInput = input.replace(/[^0-9\/\-]/g, '');
+    function processSpecialModeWithDigit(amount, reverseAmount) {
+        if (editNum1.value === '') {
+            alert('ဂဏန်းထည့်ပါ');
+            setCurrentField(editNum1);
+            return;
+        }
         
-        if (cleanInput.includes('/') || cleanInput.includes('-')) {
-            const parts = cleanInput.split(/[\/\-]/);
-            parts.forEach(part => {
-                if (part.length === 1 || part.length === 2) {
-                    const num = parseInt(part);
-                    if (!isNaN(num) && num >= 0 && num <= 99) {
-                        numbers.push(num);
-                    }
-                }
+        const digit = parseInt(editNum1.value);
+        const specialType = Array.from(selectedTypes).find(type => 
+            ['အပါ', 'ထိပ်', 'ပိတ်', 'ဘရိတ်'].includes(type));
+        
+        let numbers = [];
+        
+        if (specialType === 'အပါ') {
+            numbers = generateApalNumbers(digit);
+        } else if (specialType === 'ထိပ်') {
+            if (!reverseMode) {
+                numbers = generateFrontNumbers(digit);
+            } else {
+                // Handle reverse for ထိပ်
+                const frontNumbers = generateFrontNumbers(digit);
+                const backNumbers = generateBackNumbers(digit);
+                
+                frontNumbers.forEach(num => {
+                    addSingleBetToGlobalArray(num, amount, 'ထိပ်');
+                });
+                
+                backNumbers.forEach(num => {
+                    addSingleBetToGlobalArray(num, reverseAmount, 'ပိတ် (R)');
+                });
+                
+                return;
+            }
+        } else if (specialType === 'ပိတ်') {
+            if (!reverseMode) {
+                numbers = generateBackNumbers(digit);
+            } else {
+                // Handle reverse for ပိတ်
+                const backNumbers = generateBackNumbers(digit);
+                const frontNumbers = generateFrontNumbers(digit);
+                
+                backNumbers.forEach(num => {
+                    addSingleBetToGlobalArray(num, amount, 'ပိတ်');
+                });
+                
+                frontNumbers.forEach(num => {
+                    addSingleBetToGlobalArray(num, reverseAmount, 'ထိပ် (R)');
+                });
+                
+                return;
+            }
+        } else if (specialType === 'ဘရိတ်') {
+            numbers = generateBreakNumbers(digit);
+        }
+        
+        if (numbers.length > 0) {
+            const displayType = reverseMode ? specialType + ' (R)' : specialType;
+            numbers.forEach(num => {
+                addSingleBetToGlobalArray(num, amount, displayType);
             });
+        }
+    }
+    
+    function updateTextView() {
+        if (selectedTypes.size === 0) {
+            textview.textContent = '-';
+            textview.style.borderColor = '#3498db';
+            textview.style.backgroundColor = 'white';
         } else {
-            if (input.length === 1 || input.length === 2) {
-                const num = parseInt(input);
-                if (!isNaN(num) && num >= 0 && num <= 99) {
-                    numbers.push(num);
-                }
+            const typesArray = Array.from(selectedTypes);
+            textview.textContent = typesArray.join('/');
+            textview.style.borderColor = '#2ecc71';
+            textview.style.backgroundColor = '#e8f8f5';
+        }
+    }
+    
+    function needsDigitInput() {
+        const specialTypes = Array.from(selectedTypes);
+        const needsDigitTypes = ['အပါ', 'ထိပ်', 'ပိတ်', 'ဘရိတ်'];
+        
+        return specialTypes.some(type => needsDigitTypes.includes(type));
+    }
+    
+    function needsDigitInputForType(type) {
+        const needsDigitTypes = ['အပါ', 'ထိပ်', 'ပိတ်', 'ဘရိတ်', 'K', 
+                                'စုံကပ်', 'မကပ်', 'စုံကပ်R', 'မကပ်R', 'ကပ်'];
+        return needsDigitTypes.includes(type);
+    }
+    
+    function hasSpecialTypeWithoutDigit() {
+        const specialTypes = Array.from(selectedTypes);
+        const noDigitTypes = ['အပူး', 'ပါဝါ', 'နက္ခ', 'ညီကို', 'ကိုညီ', 
+                             'ညီကိုR', 'စုံစုံ', 'မမ', 'စုံမ', 'မစုံ', 
+                             'စုံပူး', 'မပူး'];
+        
+        return specialTypes.some(type => noDigitTypes.includes(type));
+    }
+    
+    function hasSpecialTypeWithDigit() {
+        const specialTypes = Array.from(selectedTypes);
+        const withDigitTypes = ['အပါ', 'ထိပ်', 'ပိတ်', 'ဘရိတ်'];
+        
+        return specialTypes.some(type => withDigitTypes.includes(type));
+    }
+    
+    function shouldAutoAdvance(field) {
+        if (field !== editNum1) return false;
+        
+        if (selectedTypes.size === 0) {
+            // Regular number - auto advance after 2 digits
+            return field.value.length >= 2;
+        } else if (needsDigitInput()) {
+            // Special types needing 1 digit
+            return field.value.length >= 1;
+        }
+        
+        return false;
+    }
+    
+    function getMaxLengthForField(field) {
+        if (field === editNum1) {
+            if (needsDigitInput()) {
+                return 1; // For 1-digit special types
+            } else {
+                return 2; // Regular 2-digit numbers
             }
         }
-        
-        return numbers;
+        return 7; // For amount fields
     }
     
-    // Number generation functions
+    // Helper functions for number generation (same as before)
     function generateFrontNumbers(digit) {
         const numbers = [];
         for (let i = 0; i <= 9; i++) {
@@ -775,114 +669,87 @@ document.addEventListener('DOMContentLoaded', function() {
         return numbers;
     }
     
-    function generateEvenKhatNumbers(digit) {
+    function parseNumberInput(input) {
         const numbers = [];
-        const evenDigits = [0, 2, 4, 6, 8];
-        for (const evenDigit of evenDigits) {
-            numbers.push(parseInt(digit.toString() + evenDigit.toString()));
-        }
-        return numbers;
-    }
-    
-    function generateOddKhatNumbers(digit) {
-        const numbers = [];
-        const oddDigits = [1, 3, 5, 7, 9];
-        for (const oddDigit of oddDigits) {
-            numbers.push(parseInt(digit.toString() + oddDigit.toString()));
-        }
-        return numbers;
-    }
-    
-    function generateEvenKhatRNumbers(digit) {
-        const numbers = [];
-        const evenDigits = [0, 2, 4, 6, 8];
-        for (const evenDigit of evenDigits) {
-            numbers.push(parseInt(digit.toString() + evenDigit.toString()));
-            numbers.push(parseInt(evenDigit.toString() + digit.toString()));
-        }
-        return [...new Set(numbers)];
-    }
-    
-    function generateOddKhatRNumbers(digit) {
-        const numbers = [];
-        const oddDigits = [1, 3, 5, 7, 9];
-        for (const oddDigit of oddDigits) {
-            numbers.push(parseInt(digit.toString() + oddDigit.toString()));
-            numbers.push(parseInt(oddDigit.toString() + digit.toString()));
-        }
-        return [...new Set(numbers)];
-    }
-    
-    function generateKhatNumbers(digit) {
-        const numbers = [];
-        for (let i = 0; i <= 9; i++) {
-            numbers.push(parseInt(digit.toString() + i.toString()));
-            numbers.push(parseInt(i.toString() + digit.toString()));
-        }
-        return [...new Set(numbers)];
-    }
-    
-    function generateCombinationsFromArray(arr, k) {
-        const combinations = [];
+        const cleanInput = input.replace(/[^0-9\/\-]/g, '');
         
-        function combine(start, current) {
-            if (current.length === k) {
-                combinations.push([...current]);
-                return;
-            }
-            
-            for (let i = start; i < arr.length; i++) {
-                current.push(arr[i]);
-                combine(i + 1, current);
-                current.pop();
+        if (cleanInput.includes('/') || cleanInput.includes('-')) {
+            const parts = cleanInput.split(/[\/\-]/);
+            parts.forEach(part => {
+                if (part.length === 1 || part.length === 2) {
+                    const num = parseInt(part);
+                    if (!isNaN(num) && num >= 0 && num <= 99) {
+                        numbers.push(num);
+                    }
+                }
+            });
+        } else {
+            if (input.length === 1 || input.length === 2) {
+                const num = parseInt(input);
+                if (!isNaN(num) && num >= 0 && num <= 99) {
+                    numbers.push(num);
+                }
             }
         }
         
-        combine(0, []);
-        return combinations;
-    }
-    
-    function generateAhkwayNumbers(digitsStr) {
-        const numbers = new Set();
-        const digits = digitsStr.split('');
-        
-        const combos = generateCombinationsFromArray(digits, 2);
-        
-        combos.forEach(combo => {
-            const num1 = parseInt(combo[0] + combo[1]);
-            const num2 = parseInt(combo[1] + combo[0]);
-            numbers.add(num1);
-            numbers.add(num2);
-        });
-        
-        return Array.from(numbers);
-    }
-    
-    function generateKhwayPhuNumbers(digitsStr) {
-        const numbers = new Set();
-        const digits = digitsStr.split('');
-        
-        const combos = generateCombinationsFromArray(digits, 2);
-        
-        combos.forEach(combo => {
-            const num1 = parseInt(combo[0] + combo[1]);
-            const num2 = parseInt(combo[1] + combo[0]);
-            numbers.add(num1);
-            numbers.add(num2);
-        });
-        
-        const uniqueDigits = [...new Set(digits)];
-        uniqueDigits.forEach(digit => {
-            const doubleNum = parseInt(digit + digit);
-            numbers.add(doubleNum);
-        });
-        
-        return Array.from(numbers);
+        return numbers;
     }
     
     function reverseNumber(n) {
         const s = n.toString().padStart(2, '0');
         return parseInt(s.split('').reverse().join(''));
+    }
+    
+    function addSingleBetToGlobalArray(num, amount, type) {
+        // Use global bets array
+        if (!window.bets) {
+            window.bets = [];
+            window.totalAmount = 0;
+        }
+        
+        const newBet = {
+            number: num,
+            amount: amount,
+            display: num.toString().padStart(2, '0'),
+            type: type
+        };
+        
+        window.bets.push(newBet);
+        window.totalAmount += amount;
+        
+        // Update display
+        updateDisplayDirectly();
+    }
+    
+    function updateDisplayDirectly() {
+        const betList = document.getElementById('betList');
+        const totalDisplay = document.getElementById('totalAmount');
+        const countDisplay = document.getElementById('listCount');
+        
+        if (!betList || !totalDisplay || !countDisplay) return;
+        
+        const currentBets = window.bets || [];
+        const currentTotal = window.totalAmount || 0;
+        
+        if (currentBets.length === 0) {
+            betList.innerHTML = '<div class="empty-message">လောင်းကြေးမရှိသေးပါ</div>';
+        } else {
+            let html = '';
+            currentBets.forEach((bet, index) => {
+                html += `
+                <div class="bet-item">
+                    <div class="bet-number">${bet.display}</div>
+                    <div class="bet-amount">${bet.amount.toLocaleString()}</div>
+                    <div class="bet-type">${bet.type}</div>
+                    <button class="delete-btn" onclick="deleteGlobalBet(${index})">ဖျက်</button>
+                </div>
+                `;
+            });
+            betList.innerHTML = html;
+        }
+        
+        totalDisplay.textContent = currentTotal.toLocaleString();
+        countDisplay.textContent = currentBets.length;
     }
     
     // Global delete function
@@ -894,20 +761,9 @@ document.addEventListener('DOMContentLoaded', function() {
             window.totalAmount -= deleted.amount;
             window.bets.splice(index, 1);
             
-            // Update a3.js if exists
-            if (typeof bets !== 'undefined') {
-                bets = window.bets;
-                totalAmount = window.totalAmount;
-            }
-            
-            // Update display
-            if (typeof updateDisplay === 'function') {
-                updateDisplay();
-            } else {
-                updateDisplayDirectly();
-            }
+            updateDisplayDirectly();
         }
     };
     
-    console.log('Keyboard.js - Final complete version loaded successfully');
+    console.log('Keyboard.js - Laptop Keyboard Version loaded successfully');
 });
