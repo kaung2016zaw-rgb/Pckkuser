@@ -20,7 +20,7 @@
         }
 
         .container {
-            max-width: 500px;
+            max-width: 1200px;
             margin: 0 auto;
             background: white;
             border-radius: 15px;
@@ -37,8 +37,6 @@
             padding: 15px;
             text-align: center;
             border-bottom: 3px solid #3498db;
-            position: sticky;
-            top: 0;
             z-index: 100;
         }
 
@@ -57,6 +55,29 @@
             background: rgba(255, 255, 255, 0.1);
             border-radius: 10px;
             display: inline-block;
+        }
+
+        .main-content {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .left-frame {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            border-right: 2px solid #e9ecef;
+            min-width: 0;
+        }
+
+        .right-frame {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #f8f9fa;
+            min-width: 0;
+            max-width: 400px;
         }
 
         .user-select-section {
@@ -102,8 +123,6 @@
             background: white;
             padding: 10px;
             border-bottom: 1px solid #eee;
-            position: sticky;
-            top: 110px;
             z-index: 90;
         }
 
@@ -127,9 +146,6 @@
             font-weight: bold;
             color: #2c3e50;
             border: 1px solid #e9ecef;
-            position: sticky;
-            top: 170px;
-            z-index: 80;
             font-size: 12px;
         }
 
@@ -140,9 +156,9 @@
 
         .list-view {
             padding: 0 10px;
-            height: 150px;
+            flex: 1;
             overflow-y: auto;
-            flex-shrink: 0;
+            min-height: 0;
         }
 
         .bet-list {
@@ -204,8 +220,6 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            position: sticky;
-            bottom: 60px;
             z-index: 100;
             flex-shrink: 0;
         }
@@ -244,8 +258,6 @@
             justify-content: space-between;
             align-items: center;
             padding: 8px 10px;
-            position: sticky;
-            bottom: 0;
             z-index: 100;
             flex-shrink: 0;
         }
@@ -539,6 +551,21 @@
             border-color: #27ae60;
         }
 
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .left-frame {
+                border-right: none;
+                border-bottom: 2px solid #e9ecef;
+            }
+            
+            .right-frame {
+                max-width: 100%;
+            }
+        }
+
         @media (max-width: 480px) {
             .container {
                 border-radius: 10px;
@@ -700,110 +727,95 @@
             <div class="subtitle">Activetime <span id="activeTimeDisplay"></span></div>
         </header>
         
-        <!-- User Selection from Supabase -->
-        <div class="user-select-section">
-            <div class="user-select-container">
-                <div class="user-label">အမည်:</div>
-                <select id="userSelect">
-                    <option value="">Loading users...</option>
-                </select>
-                <div id="selectedUserDisplay" class="selected-user-display"></div>
-            </div>
-        </div>
-        
-        <!-- List Header (Fixed) -->
-        <div class="list-header">
-            <h3>လောင်းကြေးများ <span id="listCount" class="list-count">0</span></h3>
-            <div class="column-headers">
-                <div class="column-number">ဂဏန်း</div>
-                <div class="column-amount">ငွေပမာဏ</div>
-                <div class="column-type">အမျိုးအစား</div>
-                <div class="column-action">Action</div>
-            </div>
-        </div>
-        
-        <!-- List View (Scrollable) -->
-        <div class="list-view">
-            <div id="betList" class="bet-list">
-                <div class="empty-message">လောင်းကြေးမရှိသေးပါ</div>
-            </div>
-        </div>
-        
-        <!-- Text View for Total -->
-        <div class="text-view">
-            <button id="clearAllBtn" class="action-btn clear-btn">Clear All</button>
-            <div id="totalAmount" class="total-amount">0</div>
-            <button id="saveBtn" class="action-btn save-btn">Save</button>
-        </div>
-        
-        <!-- Slip Count View -->
-        <div class="text-view slip-count-view">
-            <div class="slip-count-label">စုစုပေါင်း Slip:</div>
-            <div id="slipnumber" class="slipnumber">0</div>
-        </div>
-        
-        <!-- Edit View -->
-        <div class="edit-view">
-            <div class="cpt-container">
-                <button id="cptBtn" class="cpt-btn">Keyboard</button>
-            </div>
-            
-            <!-- New Input Container with separate frame -->
-            <div id="inputFrame" class="input-frame">
-               
-                <div class="input-container">
-                    <div class="input-row">
-                        <input type="text" id="editNum1" class="input-field" placeholder="ဂဏန်း" >
-                        <div id="textview" class="text-display">-</div>
-                        <input type="text" id="editNum2" class="input-field" placeholder="ယူနစ်" >
-                        <input type="text" id="editNum3" class="input-field" placeholder="အာယူနစ်" >
+        <div class="main-content">
+            <!-- Left Frame -->
+            <div class="left-frame">
+                <!-- User Selection from Supabase -->
+                <div class="user-select-section">
+                    <div class="user-select-container">
+                        <div class="user-label">အမည်:</div>
+                        <select id="userSelect">
+                            <option value="">Loading users...</option>
+                        </select>
+                        <div id="selectedUserDisplay" class="selected-user-display"></div>
                     </div>
-                 
-                </div>
-            </div>
-            
-            <!-- Keyboard Container -->
-            <div id="buttonsScrollContainer" class="buttons-scroll-container">
-                <div class="button-grid">
-                    <!-- Number buttons will be added here by JavaScript -->
-                    <div style="visibility: hidden;"></div>
                 </div>
                 
-                <!-- Checkbox Buttons -->
-                <div class="additional-buttons">
-                    <button class="checkbox-btn" data-type="R">R</button>
-                    <button class="checkbox-btn" data-type="အပါ">အပါ</button>
-                    <button class="checkbox-btn" data-type="ထိပ်">ထိပ်</button>
-                    <button class="checkbox-btn" data-type="ပိတ်">ပိတ်</button>
-                    <button class="checkbox-btn" data-type="ဘရိတ်">ဘရိတ်</button>
-                    <button class="checkbox-btn" data-type="အပူး">အပူး</button>
-                    <button class="checkbox-btn" data-type="ပါဝါ">ပါဝါ</button>
-                    <button class="checkbox-btn" data-type="နက္ခ">နက္ခ</button>
-                    <button class="checkbox-btn" data-type="အခွေ">အခွေ</button>
-                    <button class="checkbox-btn" data-type="ခွေပူး">ခွေပူး</button>
-                    <button class="checkbox-btn" data-type="K">K</button>
-                    <button class="checkbox-btn" data-type="ညီကို">ညီကို</button>
-                    <button class="checkbox-btn" data-type="ကိုညီ">ကိုညီ</button>
-                    <button class="checkbox-btn" data-type="ညီကိုR">ညီကိုR</button>
-                    <button class="checkbox-btn" data-type="စုံစုံ">စုံစုံ</button>
-                    <button class="checkbox-btn" data-type="မမ">မမ</button>
-                    <button class="checkbox-btn" data-type="စုံမ">စုံမ</button>
-                    <button class="checkbox-btn" data-type="မစုံ">မစုံ</button>
-                    <button class="checkbox-btn" data-type="စုံပူး">စုံပူး</button>
-                    <button class="checkbox-btn" data-type="မပူး">မပူး</button>
-                    <button class="checkbox-btn" data-type="စုံကပ်">စုံကပ်</button>
-                    <button class="checkbox-btn" data-type="မကပ်">မကပ်</button>
-                    <button class="checkbox-btn" data-type="စုံကပ်R">စုံကပ်R</button>
-                    <button class="checkbox-btn" data-type="မကပ်R">မကပ်R</button>
-                    <button class="checkbox-btn" data-type="ကပ်">ကပ်</button>
+                <!-- Text View for Total -->
+                <div class="text-view">
+                    <button id="clearAllBtn" class="action-btn clear-btn">Clear All</button>
+                    <div id="totalAmount" class="total-amount">0</div>
+                    <button id="saveBtn" class="action-btn save-btn">Save</button>
                 </div>
-            </div>
-            
-            <!-- Original Edit Area (for textarea view) -->
-            <div id="originalEditArea" class="original-edit-area">
-                <textarea 
-                    id="betInput" 
-                    placeholder="ဥပမာ: 
+                
+                <!-- Slip Count View -->
+                <div class="text-view slip-count-view">
+                    <div class="slip-count-label">စုစုပေါင်း Slip:</div>
+                    <div id="slipnumber" class="slipnumber">0</div>
+                </div>
+                
+                <!-- Edit View -->
+                <div class="edit-view">
+                    <div class="cpt-container">
+                        <button id="cptBtn" class="cpt-btn">Keyboard</button>
+                    </div>
+                    
+                    <!-- New Input Container with separate frame -->
+                    <div id="inputFrame" class="input-frame">
+                       
+                        <div class="input-container">
+                            <div class="input-row">
+                                <input type="text" id="editNum1" class="input-field" placeholder="ဂဏန်း" >
+                                <div id="textview" class="text-display">-</div>
+                                <input type="text" id="editNum2" class="input-field" placeholder="ယူနစ်" >
+                                <input type="text" id="editNum3" class="input-field" placeholder="အာယူနစ်" >
+                            </div>
+                         
+                        </div>
+                    </div>
+                    
+                    <!-- Keyboard Container -->
+                    <div id="buttonsScrollContainer" class="buttons-scroll-container">
+                        <div class="button-grid">
+                            <!-- Number buttons will be added here by JavaScript -->
+                            <div style="visibility: hidden;"></div>
+                        </div>
+                        
+                        <!-- Checkbox Buttons -->
+                        <div class="additional-buttons">
+                            <button class="checkbox-btn" data-type="R">R</button>
+                            <button class="checkbox-btn" data-type="အပါ">အပါ</button>
+                            <button class="checkbox-btn" data-type="ထိပ်">ထိပ်</button>
+                            <button class="checkbox-btn" data-type="ပိတ်">ပိတ်</button>
+                            <button class="checkbox-btn" data-type="ဘရိတ်">ဘရိတ်</button>
+                            <button class="checkbox-btn" data-type="အပူး">အပူး</button>
+                            <button class="checkbox-btn" data-type="ပါဝါ">ပါဝါ</button>
+                            <button class="checkbox-btn" data-type="နက္ခ">နက္ခ</button>
+                            <button class="checkbox-btn" data-type="အခွေ">အခွေ</button>
+                            <button class="checkbox-btn" data-type="ခွေပူး">ခွေပူး</button>
+                            <button class="checkbox-btn" data-type="K">K</button>
+                            <button class="checkbox-btn" data-type="ညီကို">ညီကို</button>
+                            <button class="checkbox-btn" data-type="ကိုညီ">ကိုညီ</button>
+                            <button class="checkbox-btn" data-type="ညီကိုR">ညီကိုR</button>
+                            <button class="checkbox-btn" data-type="စုံစုံ">စုံစုံ</button>
+                            <button class="checkbox-btn" data-type="မမ">မမ</button>
+                            <button class="checkbox-btn" data-type="စုံမ">စုံမ</button>
+                            <button class="checkbox-btn" data-type="မစုံ">မစုံ</button>
+                            <button class="checkbox-btn" data-type="စုံပူး">စုံပူး</button>
+                            <button class="checkbox-btn" data-type="မပူး">မပူး</button>
+                            <button class="checkbox-btn" data-type="စုံကပ်">စုံကပ်</button>
+                            <button class="checkbox-btn" data-type="မကပ်">မကပ်</button>
+                            <button class="checkbox-btn" data-type="စုံကပ်R">စုံကပ်R</button>
+                            <button class="checkbox-btn" data-type="မကပ်R">မကပ်R</button>
+                            <button class="checkbox-btn" data-type="ကပ်">ကပ်</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Original Edit Area (for textarea view) -->
+                    <div id="originalEditArea" class="original-edit-area">
+                        <textarea 
+                            id="betInput" 
+                            placeholder="ဥပမာ: 
 12-1000
 12/34/56-1000 
 12r1000
@@ -820,13 +832,36 @@
 မမ1000
 1စုံ/1မ
 1စုံr/1မr"
-                    rows="4"
-                ></textarea>
-                <div class="button-group">
-                    <button id="a1Btn" class="a1-btn">CL</button>
-                    <button id="a2Btn" class="a2-btn">Paste</button>
-                    <button id="a4Btn" class="a4-btn">Add1</button>
-                    <button id="a3Btn" class="a3-btn">Add2</button>
+                            rows="4"
+                        ></textarea>
+                        <div class="button-group">
+                            <button id="a1Btn" class="a1-btn">CL</button>
+                            <button id="a2Btn" class="a2-btn">Paste</button>
+                            <button id="a4Btn" class="a4-btn">Add1</button>
+                            <button id="a3Btn" class="a3-btn">Add2</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Frame -->
+            <div class="right-frame">
+                <!-- List Header -->
+                <div class="list-header">
+                    <h3>လောင်းကြေးများ <span id="listCount" class="list-count">0</span></h3>
+                    <div class="column-headers">
+                        <div class="column-number">ဂဏန်း</div>
+                        <div class="column-amount">ငွေပမာဏ</div>
+                        <div class="column-type">အမျိုးအစား</div>
+                        <div class="column-action">Action</div>
+                    </div>
+                </div>
+                
+                <!-- List View (Scrollable) -->
+                <div class="list-view">
+                    <div id="betList" class="bet-list">
+                        <div class="empty-message">လောင်းကြေးမရှိသေးပါ</div>
+                    </div>
                 </div>
             </div>
         </div>
