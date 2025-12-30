@@ -1,6 +1,7 @@
 // keyboard.js - Modified for sale.html with original a3.js integration
+// FIXED: Number input now overwrites instead of appending
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('keyboard.js - ORIGINAL STYLE WITH A3.JS INTEGRATION');
+    console.log('keyboard.js - ORIGINAL STYLE WITH A3.JS INTEGRATION (FIXED OVERWRITE)');
     
     // DOM Elements from sale.html
     const editNum1 = document.getElementById('editNum1');
@@ -84,10 +85,31 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function setupEventListeners() {
-        // Input field events
-        editNum1.addEventListener('focus', () => editNum1.select());
-        editNum2.addEventListener('focus', () => editNum2.select());
-        editNum3.addEventListener('focus', () => editNum3.select());
+        // Input field events - FIXED: Auto select on focus
+        editNum1.addEventListener('focus', () => {
+            editNum1.select();
+            // Ensure only numbers can be entered
+            editNum1.setAttribute('inputmode', 'numeric');
+        });
+        editNum2.addEventListener('focus', () => {
+            editNum2.select();
+            editNum2.setAttribute('inputmode', 'numeric');
+        });
+        editNum3.addEventListener('focus', () => {
+            editNum3.select();
+            editNum3.setAttribute('inputmode', 'numeric');
+        });
+        
+        // Prevent non-numeric input in all input fields
+        editNum1.addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+        editNum2.addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+        editNum3.addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
         
         // Checkbox buttons
         checkboxButtons.forEach(button => {
@@ -160,32 +182,73 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Number input handling
+        // Number input handling - FIXED: Overwrites instead of appends
         if (e.key.length === 1 && /[0-9]/.test(e.key)) {
+            e.preventDefault(); // Prevent default to avoid double input
             handleNumberInput(e.key);
+            return;
+        }
+        
+        // Backspace handling for input fields
+        if (e.key === 'Backspace' && 
+            (document.activeElement === editNum1 || 
+             document.activeElement === editNum2 || 
+             document.activeElement === editNum3)) {
+            e.preventDefault();
+            handleBackspaceInInput();
             return;
         }
     }
     
+    // FIXED FUNCTION: Number input now overwrites instead of appending
     function handleNumberInput(digit) {
         const activeElement = document.activeElement;
         
         if (activeElement === editNum1) {
             const maxLength = getMaxLengthForField(editNum1);
-            if (editNum1.value.length < maxLength) {
-                editNum1.value += digit;
+            if (editNum1.value.length >= maxLength) {
+                // If field is full, overwrite from beginning
+                editNum1.value = digit;
+            } else {
+                // If field is not full, just overwrite current position
+                editNum1.value = digit;
             }
-            // NO AUTO MOVE - wait for Enter
+            editNum1.select(); // Keep selected for next input
         } 
         else if (activeElement === editNum2) {
-            if (editNum2.value.length < 7) {
-                editNum2.value += digit;
+            const maxLength = 7;
+            if (editNum2.value.length >= maxLength) {
+                editNum2.value = digit;
+            } else {
+                editNum2.value = digit;
             }
+            editNum2.select();
         }
         else if (activeElement === editNum3) {
-            if (editNum3.value.length < 7) {
-                editNum3.value += digit;
+            const maxLength = 7;
+            if (editNum3.value.length >= maxLength) {
+                editNum3.value = digit;
+            } else {
+                editNum3.value = digit;
             }
+            editNum3.select();
+        }
+    }
+    
+    function handleBackspaceInInput() {
+        const activeElement = document.activeElement;
+        
+        if (activeElement === editNum1) {
+            editNum1.value = '';
+            editNum1.select();
+        } 
+        else if (activeElement === editNum2) {
+            editNum2.value = '';
+            editNum2.select();
+        }
+        else if (activeElement === editNum3) {
+            editNum3.value = '';
+            editNum3.select();
         }
     }
     
@@ -820,5 +883,5 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
     
-    console.log('Keyboard.js - Original style with a3.js integration loaded successfully');
+    console.log('Keyboard.js - Original style with a3.js integration loaded successfully (Fixed Overwrite)');
 });
