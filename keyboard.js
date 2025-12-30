@@ -1,8 +1,7 @@
-
 // keyboard.js - Modified for sale.html with original a3.js integration
-// FIXED VERSION A: Complete rewrite with B code logic
+// FINAL VERSION A: Complete rewrite with B code logic and fixes
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('keyboard.js - VERSION A WITH B LOGIC');
+    console.log('keyboard.js - FINAL VERSION A WITH ALL FIXES');
     
     // DOM Elements from sale.html
     const editNum1 = document.getElementById('editNum1');
@@ -107,67 +106,32 @@ document.addEventListener('DOMContentLoaded', function() {
         checkboxButtons.forEach(button => {
             button.addEventListener('click', function() {
                 const type = this.getAttribute('data-type');
-                
-                // Clear all selections first (like B code)
-                selectedTypes.clear();
-                checkboxButtons.forEach(btn => {
-                    btn.classList.remove('checked');
-                });
-                
-                // Add the selected type
-                selectedTypes.add(type);
-                this.classList.add('checked');
-                
-                updateTextView();
-                
-                // Clear number field for special types that don't need digits
-                const noDigitTypes = ['အပူး', 'ပါဝါ', 'နက္ခ', 'ညီကို', 'ကိုညီ', 'ညီကိုR',
-                                     'စုံစုံ', 'မမ', 'စုံမ', 'မစုံ', 'စုံပူး', 'မပူး'];
-                
-                if (noDigitTypes.includes(type)) {
-                    // Like B code: clear number field and focus on amount
-                    editNum1.value = '';
-                    editNum2.focus();
-                    editNum2.select();
-                } 
-                // Special types that need 1 digit
-                else if (['အပါ', 'ထိပ်', 'ပိတ်', 'ဘရိတ်', 'စုံကပ်', 'မကပ်', 'စုံကပ်R', 'မကပ်R'].includes(type)) {
-                    // Clear number field for 1-digit types
-                    editNum1.value = '';
-                    editNum1.focus();
-                    editNum1.select();
-                }
-                // Combo modes
-                else if (type === 'အခွေ' || type === 'ခွေပူး') {
-                    // Clear number field for combo modes
-                    editNum1.value = '';
-                    editNum1.focus();
-                    editNum1.select();
-                }
-                // R mode
-                else if (type === 'R') {
-                    // Only allow R for ထိပ် and ပိတ်
-                    if (!selectedTypes.has('ထိပ်') && !selectedTypes.has('ပိတ်')) {
-                        alert('R ကို ထိပ်နှင့် ပိတ်နှင့်သာ အသုံးပြုနိုင်ပါသည်');
-                        selectedTypes.delete('R');
-                        this.classList.remove('checked');
-                        updateTextView();
-                        return;
-                    }
-                    
-                    // Show reverse field
-                    editNum3.style.display = 'block';
-                    reverseMode = true;
-                    editNum3.focus();
-                    editNum3.select();
-                }
-                // K button
-                else if (type === 'K') {
-                    editNum1.value = '';
-                    editNum1.focus();
-                    editNum1.select();
-                }
+                handleCheckboxButtonClick(type, this);
             });
+        });
+        
+        // Textview click handler - clear everything when clicked
+        textview.addEventListener('click', function() {
+            // Clear all selections
+            selectedTypes.clear();
+            checkboxButtons.forEach(btn => {
+                btn.classList.remove('checked');
+            });
+            
+            // Reset fields
+            editNum1.value = '';
+            editNum2.value = '';
+            editNum3.value = '';
+            editNum3.style.display = 'none';
+            textview.textContent = '-';
+            textview.style.borderColor = '#3498db';
+            textview.style.backgroundColor = 'white';
+            
+            reverseMode = false;
+            
+            // Focus on first field
+            editNum1.focus();
+            editNum1.select();
         });
         
         // CPT button toggle
@@ -195,6 +159,100 @@ document.addEventListener('DOMContentLoaded', function() {
         document.addEventListener('keydown', handleGlobalKeyboard);
     }
     
+    function handleCheckboxButtonClick(type, buttonElement) {
+        // If type is 'K', clear everything first
+        if (type === 'K') {
+            // Clear all selections
+            selectedTypes.clear();
+            checkboxButtons.forEach(btn => {
+                btn.classList.remove('checked');
+            });
+            
+            // Add K type
+            selectedTypes.add('K');
+            buttonElement.classList.add('checked');
+            
+            updateTextView();
+            
+            // Clear number field and focus on it
+            editNum1.value = '';
+            editNum1.focus();
+            editNum1.select();
+            return;
+        }
+        
+        // If clicking on already checked button, uncheck it
+        if (buttonElement.classList.contains('checked')) {
+            buttonElement.classList.remove('checked');
+            selectedTypes.delete(type);
+            
+            // If R was unchecked, hide reverse field
+            if (type === 'R') {
+                editNum3.style.display = 'none';
+                reverseMode = false;
+                editNum3.value = '';
+            }
+        } else {
+            // For non-K types, clear all selections first (like B code)
+            if (type !== 'R') { // R can be added without clearing others
+                selectedTypes.clear();
+                checkboxButtons.forEach(btn => {
+                    btn.classList.remove('checked');
+                });
+            }
+            
+            // Add the selected type
+            selectedTypes.add(type);
+            buttonElement.classList.add('checked');
+            
+            // Handle R mode
+            if (type === 'R') {
+                // Only allow R for ထိပ်, ပိတ်, or regular bet (no special type)
+                const allowedForR = ['ထိပ်', 'ပိတ်'];
+                const hasSpecialType = Array.from(selectedTypes).some(t => 
+                    t !== 'R' && !allowedForR.includes(t) && 
+                    !['အခွေ', 'ခွေပူး', 'K'].includes(t)
+                );
+                
+                if (hasSpecialType) {
+                    alert('R ကို ထိပ်နှင့် ပိတ်နှင့်သာ အသုံးပြုနိုင်ပါသည်');
+                    selectedTypes.delete('R');
+                    buttonElement.classList.remove('checked');
+                    updateTextView();
+                    return;
+                }
+                
+                // Show reverse field
+                editNum3.style.display = 'block';
+                reverseMode = true;
+                editNum3.focus();
+                editNum3.select();
+            }
+        }
+        
+        updateTextView();
+        
+        // Set focus based on type (like B code)
+        const needsDigit = ['အပါ', 'ထိပ်', 'ပိတ်', 'ဘရိတ်', 'စုံကပ်', 'မကပ်', 'စုံကပ်R', 'မကပ်R', 'ကပ်', 'K'].includes(type);
+        const noDigitTypes = ['အပူး', 'ပါဝါ', 'နက္ခ', 'ညီကို', 'ကိုညီ', 'ညီကိုR',
+                             'စုံစုံ', 'မမ', 'စုံမ', 'မစုံ', 'စုံပူး', 'မပူး'];
+        const comboTypes = ['အခွေ', 'ခွေပူး'];
+        
+        if (needsDigit) {
+            editNum1.value = ''; // Clear number field
+            editNum1.focus();
+            editNum1.select();
+        } else if (noDigitTypes.includes(type)) {
+            editNum1.value = ''; // Clear number field (like B code)
+            editNum2.focus();
+            editNum2.select();
+        } else if (comboTypes.includes(type)) {
+            editNum1.value = ''; // Clear number field for combo modes
+            editNum1.focus();
+            editNum1.select();
+        }
+    }
+    
     function handleGlobalKeyboard(e) {
         // Enter key processing
         if (e.key === 'Enter') {
@@ -207,11 +265,14 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.key === '/' && (document.activeElement === editNum2 || document.activeElement === editNum3)) {
             e.preventDefault();
             
-            // Only allow / for R if ထိပ် or ပိတ် is selected
+            // Allow / for R if no special type is selected (regular bet) or if ထိပ်/ပိတ် is selected
             const allowedTypes = ['ထိပ်', 'ပိတ်'];
-            const hasAllowedType = Array.from(selectedTypes).some(type => allowedTypes.includes(type));
+            const hasSpecialType = Array.from(selectedTypes).some(type => 
+                type !== 'R' && !allowedTypes.includes(type) && 
+                !['အခွေ', 'ခွေပူး', 'K'].includes(type)
+            );
             
-            if (!hasAllowedType) {
+            if (hasSpecialType) {
                 alert('/ ကို ထိပ် သို့ ပိတ်ရွေးထားမှသာ အသုံးပြုနိုင်ပါသည်');
                 return;
             }
@@ -220,7 +281,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Backspace for delete
+        // Backspace for delete when focus is on textview
         if (e.key === 'Backspace' && document.activeElement === textview) {
             e.preventDefault();
             handleDelete();
@@ -370,11 +431,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function handleSlashKey() {
-        // Check if R is allowed
+        // Check if R is allowed - allow for regular bet (no special type) or for ထိပ်/ပိတ်
         const allowedTypes = ['ထိပ်', 'ပိတ်'];
-        const hasAllowedType = Array.from(selectedTypes).some(type => allowedTypes.includes(type));
+        const hasSpecialType = Array.from(selectedTypes).some(type => 
+            type !== 'R' && !allowedTypes.includes(type) && 
+            !['အခွေ', 'ခွေပူး', 'K'].includes(type)
+        );
         
-        if (!hasAllowedType) {
+        if (hasSpecialType) {
             alert('/ ကို ထိပ် သို့ ပိတ်ရွေးထားမှသာ အသုံးပြုနိုင်ပါသည်');
             return;
         }
@@ -460,6 +524,8 @@ document.addEventListener('DOMContentLoaded', function() {
             processSpecialModeNoDigit(amount);
         } else if (hasSpecialTypeWithDigit()) {
             processSpecialModeWithDigit(amount, reverseAmount);
+        } else if (selectedTypes.has('K')) {
+            processKMode(amount);
         } else {
             processRegularBet(amount, reverseAmount);
         }
@@ -469,6 +535,29 @@ document.addEventListener('DOMContentLoaded', function() {
         autoScrollToListView();
     }
     
+    function processKMode(amount) {
+        const numberInput = editNum1.value;
+        
+        if (numberInput === '') {
+            alert('ဂဏန်းထည့်ပါ');
+            editNum1.focus();
+            editNum1.select();
+            return;
+        }
+        
+        const digit = parseInt(numberInput);
+        if (isNaN(digit) || digit < 0 || digit > 9) {
+            alert('ဂဏန်းမှားယွင်းနေပါသည် (0-9)');
+            editNum1.focus();
+            editNum1.select();
+            return;
+        }
+        
+        // K mode - same as ကပ်
+        const numbers = generateKhatNumbers(digit);
+        addBetsToA3Array(numbers, amount, 'K');
+    }
+    
     function validateInputs() {
         // Special types that don't need digit
         const noDigitTypes = ['အပူး', 'ပါဝါ', 'နက္ခ', 'ညီကို', 'ကိုညီ', 'ညီကိုR',
@@ -476,7 +565,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const hasNoDigitType = Array.from(selectedTypes).some(type => noDigitTypes.includes(type));
         
         // Special types that need 1 digit
-        const oneDigitTypes = ['အပါ', 'ထိပ်', 'ပိတ်', 'ဘရိတ်', 'စုံကပ်', 'မကပ်', 'စုံကပ်R', 'မကပ်R', 'ကပ်'];
+        const oneDigitTypes = ['အပါ', 'ထိပ်', 'ပိတ်', 'ဘရိတ်', 'စုံကပ်', 'မကပ်', 'စုံကပ်R', 'မကပ်R', 'ကပ်', 'K'];
         const hasOneDigitType = Array.from(selectedTypes).some(type => oneDigitTypes.includes(type));
         
         // Combo modes
@@ -998,5 +1087,5 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
     
-    console.log('Keyboard.js - Version A with B logic loaded successfully');
+    console.log('Keyboard.js - Final Version A with all fixes loaded successfully');
 });
