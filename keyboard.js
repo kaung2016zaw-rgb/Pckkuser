@@ -204,65 +204,36 @@ function handleNumberInput(digit) {
     const activeElement = document.activeElement;
     
     if (activeElement === editNum1) {
+// FIXED FUNCTION: Number input with manual Enter to move
+function handleNumberInput(digit) {
+    const activeElement = document.activeElement;
+    
+    if (activeElement === editNum1) {
         const maxLength = getMaxLengthForField(editNum1);
         const currentValue = editNum1.value;
         
-        // Check if field is already at max length
-        if (currentValue.length >= maxLength) {
-            // If field is full, overwrite with the new digit
+        // Check current field type and length
+        if (currentValue.length === 0) {
+            // First digit
             editNum1.value = digit;
-        } else {
-            // Add digit to current value
+        } else if (currentValue.length === 1) {
+            // Second digit - append
             editNum1.value = currentValue + digit;
-            
-            // Check if we reached max length
-            if (editNum1.value.length >= maxLength) {
-                // Auto move to next field if max length reached
-                setTimeout(() => {
-                    editNum2.focus();
-                    editNum2.select();
-                }, 50);
-            }
+            // NO AUTO MOVE - wait for Enter
+        } else if (currentValue.length >= 2) {
+            // Already has 2+ digits - overwrite with first digit
+            editNum1.value = digit;
         }
     } 
     else if (activeElement === editNum2) {
-        const currentValue = editNum2.value;
-        const maxLength = 7;
-        
-        // For amount field, always overwrite if single digit or empty
-        if (currentValue === '' || currentValue.length === 1) {
-            editNum2.value = currentValue + digit;
-            
-            // If it's the first digit, select for second digit
-            if (currentValue === '') {
-                editNum2.select();
-            }
-        } else {
-            // If already has digits, overwrite with new digit
-            editNum2.value = digit;
-            editNum2.select();
-        }
+        // Amount field - append digits (no limit)
+        editNum2.value += digit;
     }
     else if (activeElement === editNum3) {
-        const currentValue = editNum3.value;
-        const maxLength = 7;
-        
-        // For reverse amount field, same logic as editNum2
-        if (currentValue === '' || currentValue.length === 1) {
-            editNum3.value = currentValue + digit;
-            
-            // If it's the first digit, select for second digit
-            if (currentValue === '') {
-                editNum3.select();
-            }
-        } else {
-            // If already has digits, overwrite with new digit
-            editNum3.value = digit;
-            editNum3.select();
-        }
+        // Reverse amount field - append digits (no limit)
+        editNum3.value += digit;
     }
 }
-    
     function handleBackspaceInInput() {
         const activeElement = document.activeElement;
         
@@ -913,4 +884,5 @@ function handleNumberInput(digit) {
     
     console.log('Keyboard.js - Original style with a3.js integration loaded successfully (Fixed Overwrite)');
 });
+
 
