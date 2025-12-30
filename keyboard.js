@@ -199,12 +199,8 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
     }
-    // FIXED FUNCTION: Number input now overwrites after 2 digits
-function handleNumberInput(digit) {
-    const activeElement = document.activeElement;
     
-    if (activeElement === editNum1) {
-// FIXED FUNCTION: Number input with manual Enter to move
+ // FIXED FUNCTION: Number input with manual Enter to move
 function handleNumberInput(digit) {
     const activeElement = document.activeElement;
     
@@ -234,6 +230,7 @@ function handleNumberInput(digit) {
         editNum3.value += digit;
     }
 }
+    
     function handleBackspaceInInput() {
         const activeElement = document.activeElement;
         
@@ -884,5 +881,3 @@ function handleNumberInput(digit) {
     
     console.log('Keyboard.js - Original style with a3.js integration loaded successfully (Fixed Overwrite)');
 });
-
-
