@@ -1,7 +1,8 @@
+
 // keyboard.js - Modified for sale.html with original a3.js integration
-// FIXED: Number input now overwrites instead of appending
+// FIXED VERSION A: Complete rewrite with B code logic
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('keyboard.js - ORIGINAL STYLE WITH A3.JS INTEGRATION (FIXED OVERWRITE)');
+    console.log('keyboard.js - VERSION A WITH B LOGIC');
     
     // DOM Elements from sale.html
     const editNum1 = document.getElementById('editNum1');
@@ -15,15 +16,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const betList = document.getElementById('betList');
     const listView = document.querySelector('.list-view');
     
-    // State variables (same as original keyboard.js)
+    // State variables
     let reverseMode = false;
-    let isSpecialMode = false;
-    let specialType = '';
-    let isComboMode = false;
-    let comboType = '';
     let selectedTypes = new Set();
     
-    // Special cases definitions (same as original keyboard.js)
+    // Special cases definitions (from B code)
     const specialCases = {
         'အပူး': [0, 11, 22, 33, 44, 55, 66, 77, 88, 99],
         'ပါဝါ': [5, 16, 27, 38, 49, 50, 61, 72, 83, 94],
@@ -51,10 +48,6 @@ document.addEventListener('DOMContentLoaded', function() {
         textview.textContent = '-';
         
         reverseMode = false;
-        isSpecialMode = false;
-        specialType = '';
-        isComboMode = false;
-        comboType = '';
         selectedTypes.clear();
         
         // Reset checkbox buttons
@@ -85,10 +78,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function setupEventListeners() {
-        // Input field events - FIXED: Auto select on focus
+        // Input field events
         editNum1.addEventListener('focus', () => {
             editNum1.select();
-            // Ensure only numbers can be entered
             editNum1.setAttribute('inputmode', 'numeric');
         });
         editNum2.addEventListener('focus', () => {
@@ -100,7 +92,7 @@ document.addEventListener('DOMContentLoaded', function() {
             editNum3.setAttribute('inputmode', 'numeric');
         });
         
-        // Prevent non-numeric input in all input fields
+        // Prevent non-numeric input
         editNum1.addEventListener('input', function(e) {
             this.value = this.value.replace(/[^0-9]/g, '');
         });
@@ -111,10 +103,70 @@ document.addEventListener('DOMContentLoaded', function() {
             this.value = this.value.replace(/[^0-9]/g, '');
         });
         
-        // Checkbox buttons
+        // Checkbox buttons (like B code)
         checkboxButtons.forEach(button => {
             button.addEventListener('click', function() {
-                handleCheckboxButton(this);
+                const type = this.getAttribute('data-type');
+                
+                // Clear all selections first (like B code)
+                selectedTypes.clear();
+                checkboxButtons.forEach(btn => {
+                    btn.classList.remove('checked');
+                });
+                
+                // Add the selected type
+                selectedTypes.add(type);
+                this.classList.add('checked');
+                
+                updateTextView();
+                
+                // Clear number field for special types that don't need digits
+                const noDigitTypes = ['အပူး', 'ပါဝါ', 'နက္ခ', 'ညီကို', 'ကိုညီ', 'ညီကိုR',
+                                     'စုံစုံ', 'မမ', 'စုံမ', 'မစုံ', 'စုံပူး', 'မပူး'];
+                
+                if (noDigitTypes.includes(type)) {
+                    // Like B code: clear number field and focus on amount
+                    editNum1.value = '';
+                    editNum2.focus();
+                    editNum2.select();
+                } 
+                // Special types that need 1 digit
+                else if (['အပါ', 'ထိပ်', 'ပိတ်', 'ဘရိတ်', 'စုံကပ်', 'မကပ်', 'စုံကပ်R', 'မကပ်R'].includes(type)) {
+                    // Clear number field for 1-digit types
+                    editNum1.value = '';
+                    editNum1.focus();
+                    editNum1.select();
+                }
+                // Combo modes
+                else if (type === 'အခွေ' || type === 'ခွေပူး') {
+                    // Clear number field for combo modes
+                    editNum1.value = '';
+                    editNum1.focus();
+                    editNum1.select();
+                }
+                // R mode
+                else if (type === 'R') {
+                    // Only allow R for ထိပ် and ပိတ်
+                    if (!selectedTypes.has('ထိပ်') && !selectedTypes.has('ပိတ်')) {
+                        alert('R ကို ထိပ်နှင့် ပိတ်နှင့်သာ အသုံးပြုနိုင်ပါသည်');
+                        selectedTypes.delete('R');
+                        this.classList.remove('checked');
+                        updateTextView();
+                        return;
+                    }
+                    
+                    // Show reverse field
+                    editNum3.style.display = 'block';
+                    reverseMode = true;
+                    editNum3.focus();
+                    editNum3.select();
+                }
+                // K button
+                else if (type === 'K') {
+                    editNum1.value = '';
+                    editNum1.focus();
+                    editNum1.select();
+                }
             });
         });
         
@@ -139,33 +191,43 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // Global keyboard shortcuts
+        // Global keyboard shortcuts with function keys
         document.addEventListener('keydown', handleGlobalKeyboard);
     }
     
     function handleGlobalKeyboard(e) {
-        // Enter key processing - ORIGINAL LOGIC
+        // Enter key processing
         if (e.key === 'Enter') {
             e.preventDefault();
             handleEnterKey();
             return;
         }
         
-        // Slash (/) key for R mode
+        // Slash (/) key for R mode (like B code)
         if (e.key === '/' && (document.activeElement === editNum2 || document.activeElement === editNum3)) {
             e.preventDefault();
+            
+            // Only allow / for R if ထိပ် or ပိတ် is selected
+            const allowedTypes = ['ထိပ်', 'ပိတ်'];
+            const hasAllowedType = Array.from(selectedTypes).some(type => allowedTypes.includes(type));
+            
+            if (!hasAllowedType) {
+                alert('/ ကို ထိပ် သို့ ပိတ်ရွေးထားမှသာ အသုံးပြုနိုင်ပါသည်');
+                return;
+            }
+            
             handleSlashKey();
             return;
         }
         
-        // Backspace for delete when focus is on textview
+        // Backspace for delete
         if (e.key === 'Backspace' && document.activeElement === textview) {
             e.preventDefault();
             handleDelete();
             return;
         }
         
-        // Function keys for special types
+        // Function keys mapping (like B code but with F1-F5)
         const functionKeys = {
             'F9': 'ထိပ်',
             'F8': 'ပိတ်',
@@ -173,7 +235,12 @@ document.addEventListener('DOMContentLoaded', function() {
             'F7': 'အပူး',
             'F12': 'ဘရိတ်',
             'F11': 'ပါဝါ',
-            'F10': 'နက္ခ'
+            'F10': 'နက္ခ',
+            'F1': 'စုံပူး',
+            'F2': 'မပူး',
+            'F3': 'စုံစုံ',
+            'F4': 'မမ',
+            'F5': 'ညီကိုR'
         };
         
         if (functionKeys[e.key]) {
@@ -182,9 +249,9 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Number input handling - FIXED: Overwrites instead of appends
+        // Number input handling - FIXED with overwrite logic
         if (e.key.length === 1 && /[0-9]/.test(e.key)) {
-            e.preventDefault(); // Prevent default to avoid double input
+            e.preventDefault();
             handleNumberInput(e.key);
             return;
         }
@@ -200,36 +267,58 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
- // FIXED FUNCTION: Number input with manual Enter to move
-function handleNumberInput(digit) {
-    const activeElement = document.activeElement;
-    
-    if (activeElement === editNum1) {
-        const maxLength = getMaxLengthForField(editNum1);
-        const currentValue = editNum1.value;
+    // FIXED FUNCTION: Number input with proper overwrite logic
+    function handleNumberInput(digit) {
+        const activeElement = document.activeElement;
         
-        // Check current field type and length
-        if (currentValue.length === 0) {
-            // First digit
-            editNum1.value = digit;
-        } else if (currentValue.length === 1) {
-            // Second digit - append
-            editNum1.value = currentValue + digit;
-            // NO AUTO MOVE - wait for Enter
-        } else if (currentValue.length >= 2) {
-            // Already has 2+ digits - overwrite with first digit
-            editNum1.value = digit;
+        // Special types that need 1 digit (ထိပ်၊ ပိတ်၊ အပါ၊ etc.)
+        const oneDigitTypes = ['အပါ', 'ထိပ်', 'ပိတ်', 'ဘရိတ်', 'စုံကပ်', 'မကပ်', 'စုံကပ်R', 'မကပ်R', 'ကပ်', 'K'];
+        const hasOneDigitType = Array.from(selectedTypes).some(type => oneDigitTypes.includes(type));
+        
+        if (activeElement === editNum1) {
+            // Check if it's a 1-digit type
+            if (hasOneDigitType) {
+                // Always overwrite for 1-digit types
+                editNum1.value = digit;
+                
+                // Auto move to amount field after 1 digit
+                setTimeout(() => {
+                    editNum2.focus();
+                    editNum2.select();
+                }, 50);
+            }
+            // Check if it's combo mode
+            else if (selectedTypes.has('အခွေ') || selectedTypes.has('ခွေပူး')) {
+                // Append for combo modes
+                editNum1.value += digit;
+                // NO AUTO MOVE - wait for Enter (like B code)
+            }
+            // Regular 2-digit number
+            else {
+                const currentValue = editNum1.value;
+                
+                if (currentValue.length === 0) {
+                    // First digit
+                    editNum1.value = digit;
+                } else if (currentValue.length === 1) {
+                    // Second digit
+                    editNum1.value = currentValue + digit;
+                    // NO AUTO MOVE - wait for Enter
+                } else {
+                    // Already has 2 digits - overwrite with new digit
+                    editNum1.value = digit;
+                }
+            }
+        } 
+        else if (activeElement === editNum2) {
+            // Amount field - just add the digit (like B code)
+            editNum2.value += digit;
         }
-    } 
-    else if (activeElement === editNum2) {
-        // Amount field - append digits (no limit)
-        editNum2.value += digit;
+        else if (activeElement === editNum3) {
+            // Reverse amount field - just add the digit (like B code)
+            editNum3.value += digit;
+        }
     }
-    else if (activeElement === editNum3) {
-        // Reverse amount field - append digits (no limit)
-        editNum3.value += digit;
-    }
-}
     
     function handleBackspaceInInput() {
         const activeElement = document.activeElement;
@@ -248,22 +337,8 @@ function handleNumberInput(digit) {
         }
     }
     
-    function getMaxLengthForField(field) {
-        if (field === editNum1) {
-            if (selectedTypes.has('အခွေ') || selectedTypes.has('ခွေပူး')) {
-                return 10; // For combo modes
-            } else if (selectedTypes.has('အပါ') || selectedTypes.has('ထိပ်') || 
-                      selectedTypes.has('ပိတ်') || selectedTypes.has('ဘရိတ်')) {
-                return 1; // For 1-digit special types
-            } else {
-                return 2; // Regular 2-digit numbers
-            }
-        }
-        return 7; // For amount fields
-    }
-    
     function handleFunctionKey(type) {
-        // Clear all selections first
+        // Clear all selections first (like B code)
         selectedTypes.clear();
         checkboxButtons.forEach(btn => {
             btn.classList.remove('checked');
@@ -278,12 +353,17 @@ function handleNumberInput(digit) {
         
         updateTextView();
         
-        // Set focus based on type
-        const needsDigit = ['အပါ', 'ထိပ်', 'ပိတ်', 'ဘရိတ်'].includes(type);
+        // Set focus based on type (like B code)
+        const needsDigit = ['အပါ', 'ထိပ်', 'ပိတ်', 'ဘရိတ်', 'စုံကပ်', 'မကပ်', 'စုံကပ်R', 'မကပ်R', 'ကပ်'].includes(type);
+        const noDigitTypes = ['အပူး', 'ပါဝါ', 'နက္ခ', 'ညီကို', 'ကိုညီ', 'ညီကိုR',
+                             'စုံစုံ', 'မမ', 'စုံမ', 'မစုံ', 'စုံပူး', 'မပူး'];
+        
         if (needsDigit) {
+            editNum1.value = ''; // Clear number field
             editNum1.focus();
             editNum1.select();
-        } else {
+        } else if (noDigitTypes.includes(type)) {
+            editNum1.value = ''; // Clear number field (like B code)
             editNum2.focus();
             editNum2.select();
         }
@@ -291,14 +371,12 @@ function handleNumberInput(digit) {
     
     function handleSlashKey() {
         // Check if R is allowed
-        if (selectedTypes.size > 0 && !selectedTypes.has('R')) {
-            const allowedWithR = ['ထိပ်', 'ပိတ်'];
-            const hasAllowedType = Array.from(selectedTypes).some(type => allowedWithR.includes(type));
-            
-            if (!hasAllowedType) {
-                alert('R ကို ထိပ်နှင့် ပိတ်နှင့်သာ အသုံးပြုနိုင်ပါသည်');
-                return;
-            }
+        const allowedTypes = ['ထိပ်', 'ပိတ်'];
+        const hasAllowedType = Array.from(selectedTypes).some(type => allowedTypes.includes(type));
+        
+        if (!hasAllowedType) {
+            alert('/ ကို ထိပ် သို့ ပိတ်ရွေးထားမှသာ အသုံးပြုနိုင်ပါသည်');
+            return;
         }
         
         // Toggle R mode
@@ -318,56 +396,8 @@ function handleNumberInput(digit) {
         editNum3.select();
     }
     
-    function handleCheckboxButton(button) {
-        const type = button.getAttribute('data-type');
-        
-        // Toggle selection
-        if (button.classList.contains('checked')) {
-            button.classList.remove('checked');
-            selectedTypes.delete(type);
-            
-            // If R was unchecked, hide reverse field
-            if (type === 'R') {
-                editNum3.style.display = 'none';
-                reverseMode = false;
-                editNum3.value = '';
-            }
-        } else {
-            // If it's R, remove other R-related types
-            if (type === 'R') {
-                ['R', 'ညီကိုR', 'စုံကပ်R', 'မကပ်R'].forEach(t => {
-                    if (selectedTypes.has(t)) {
-                        selectedTypes.delete(t);
-                        document.querySelector(`[data-type="${t}"]`)?.classList.remove('checked');
-                    }
-                });
-                
-                // Show reverse field
-                editNum3.style.display = 'block';
-                reverseMode = true;
-            }
-            
-            button.classList.add('checked');
-            selectedTypes.add(type);
-        }
-        
-        updateTextView();
-        
-        // Auto-set focus based on selection
-        if (type === 'R') {
-            editNum3.focus();
-            editNum3.select();
-        } else if (needsDigitInputForType(type)) {
-            editNum1.focus();
-            editNum1.select();
-        } else {
-            editNum2.focus();
-            editNum2.select();
-        }
-    }
-    
     function handleDelete() {
-        // Clear selected types
+        // Clear selected types (like B code)
         selectedTypes.clear();
         checkboxButtons.forEach(btn => {
             btn.classList.remove('checked');
@@ -412,7 +442,7 @@ function handleNumberInput(digit) {
             return;
         }
         
-        // Get amount (multiply by 100 for unit) - ORIGINAL LOGIC
+        // Get amount (multiply by 100 for unit)
         const unitAmount = parseInt(editNum2.value);
         const amount = unitAmount * 100;
         
@@ -423,7 +453,7 @@ function handleNumberInput(digit) {
             reverseAmount = reverseUnit * 100;
         }
         
-        // Process based on selected types
+        // Process based on selected types (like B code logic)
         if (selectedTypes.has('အခွေ') || selectedTypes.has('ခွေပူး')) {
             processComboMode(amount);
         } else if (hasSpecialTypeWithoutDigit()) {
@@ -440,9 +470,31 @@ function handleNumberInput(digit) {
     }
     
     function validateInputs() {
+        // Special types that don't need digit
+        const noDigitTypes = ['အပူး', 'ပါဝါ', 'နက္ခ', 'ညီကို', 'ကိုညီ', 'ညီကိုR',
+                             'စုံစုံ', 'မမ', 'စုံမ', 'မစုံ', 'စုံပူး', 'မပူး'];
+        const hasNoDigitType = Array.from(selectedTypes).some(type => noDigitTypes.includes(type));
+        
+        // Special types that need 1 digit
+        const oneDigitTypes = ['အပါ', 'ထိပ်', 'ပိတ်', 'ဘရိတ်', 'စုံကပ်', 'မကပ်', 'စုံကပ်R', 'မကပ်R', 'ကပ်'];
+        const hasOneDigitType = Array.from(selectedTypes).some(type => oneDigitTypes.includes(type));
+        
+        // Combo modes
+        const isComboMode = selectedTypes.has('အခွေ') || selectedTypes.has('ခွေပူး');
+        
         // Check number field
         if (editNum1.value === '') {
-            if (needsDigitInput()) {
+            if (hasOneDigitType || isComboMode) {
+                if (hasOneDigitType) {
+                    alert('ဂဏန်းထည့်ပါ (တစ်လုံး)');
+                } else if (isComboMode) {
+                    alert('ဂဏန်းထည့်ပါ (နှစ်လုံး သို့ အထက်)');
+                }
+                editNum1.focus();
+                editNum1.select();
+                return false;
+            } else if (!hasNoDigitType && selectedTypes.size === 0) {
+                // Regular bet needs number
                 alert('ဂဏန်းထည့်ပါ');
                 editNum1.focus();
                 editNum1.select();
@@ -455,6 +507,16 @@ function handleNumberInput(digit) {
                 editNum1.focus();
                 editNum1.select();
                 return false;
+            }
+            
+            // Validate for 1-digit types
+            if (hasOneDigitType) {
+                if (num < 0 || num > 9) {
+                    alert('ဂဏန်းမှားယွင်းနေပါသည် (0-9)');
+                    editNum1.focus();
+                    editNum1.select();
+                    return false;
+                }
             }
         }
         
@@ -510,9 +572,14 @@ function handleNumberInput(digit) {
     }
     
     function processSpecialModeNoDigit(amount) {
-        const specialType = Array.from(selectedTypes).find(type => 
-            ['အပူး', 'ပါဝါ', 'နက္ခ', 'ညီကို', 'ကိုညီ', 'ညီကိုR',
-             'စုံစုံ', 'မမ', 'စုံမ', 'မစုံ', 'စုံပူး', 'မပူး'].includes(type));
+        // Find the special type from selectedTypes
+        let specialType = '';
+        for (const type of selectedTypes) {
+            if (specialCases[type]) {
+                specialType = type;
+                break;
+            }
+        }
         
         if (specialType && specialCases[specialType]) {
             const numbers = specialCases[specialType];
@@ -529,8 +596,16 @@ function handleNumberInput(digit) {
         }
         
         const digit = parseInt(editNum1.value);
-        const specialType = Array.from(selectedTypes).find(type => 
-            ['အပါ', 'ထိပ်', 'ပိတ်', 'ဘရိတ်'].includes(type));
+        
+        // Find the special type from selectedTypes
+        let specialType = '';
+        const specialTypes = ['အပါ', 'ထိပ်', 'ပိတ်', 'ဘရိတ်', 'စုံကပ်', 'မကပ်', 'စုံကပ်R', 'မကပ်R', 'ကပ်'];
+        for (const type of selectedTypes) {
+            if (specialTypes.includes(type)) {
+                specialType = type;
+                break;
+            }
+        }
         
         let numbers = [];
         
@@ -540,7 +615,7 @@ function handleNumberInput(digit) {
             if (!reverseMode) {
                 numbers = generateFrontNumbers(digit);
             } else {
-                // Handle reverse for ထိပ်
+                // Handle reverse for ထိပ် (like B code)
                 const frontNumbers = generateFrontNumbers(digit);
                 const backNumbers = generateBackNumbers(digit);
                 
@@ -552,7 +627,7 @@ function handleNumberInput(digit) {
             if (!reverseMode) {
                 numbers = generateBackNumbers(digit);
             } else {
-                // Handle reverse for ပိတ်
+                // Handle reverse for ပိတ် (like B code)
                 const backNumbers = generateBackNumbers(digit);
                 const frontNumbers = generateFrontNumbers(digit);
                 
@@ -562,6 +637,16 @@ function handleNumberInput(digit) {
             }
         } else if (specialType === 'ဘရိတ်') {
             numbers = generateBreakNumbers(digit);
+        } else if (specialType === 'စုံကပ်') {
+            numbers = generateEvenKhatNumbers(digit);
+        } else if (specialType === 'မကပ်') {
+            numbers = generateOddKhatNumbers(digit);
+        } else if (specialType === 'စုံကပ်R') {
+            numbers = generateEvenKhatRNumbers(digit);
+        } else if (specialType === 'မကပ်R') {
+            numbers = generateOddKhatRNumbers(digit);
+        } else if (specialType === 'ကပ်') {
+            numbers = generateKhatNumbers(digit);
         }
         
         if (numbers.length > 0) {
@@ -601,18 +686,6 @@ function handleNumberInput(digit) {
         }
     }
     
-    function needsDigitInput() {
-        const specialTypes = Array.from(selectedTypes);
-        const needsDigitTypes = ['အပါ', 'ထိပ်', 'ပိတ်', 'ဘရိတ်', 'အခွေ', 'ခွေပူး'];
-        
-        return specialTypes.some(type => needsDigitTypes.includes(type));
-    }
-    
-    function needsDigitInputForType(type) {
-        const needsDigitTypes = ['အပါ', 'ထိပ်', 'ပိတ်', 'ဘရိတ်', 'အခွေ', 'ခွေပူး'];
-        return needsDigitTypes.includes(type);
-    }
-    
     function hasSpecialTypeWithoutDigit() {
         const specialTypes = Array.from(selectedTypes);
         const noDigitTypes = ['အပူး', 'ပါဝါ', 'နက္ခ', 'ညီကို', 'ကိုညီ', 'ညီကိုR',
@@ -623,12 +696,12 @@ function handleNumberInput(digit) {
     
     function hasSpecialTypeWithDigit() {
         const specialTypes = Array.from(selectedTypes);
-        const withDigitTypes = ['အပါ', 'ထိပ်', 'ပိတ်', 'ဘရိတ်'];
+        const withDigitTypes = ['အပါ', 'ထိပ်', 'ပိတ်', 'ဘရိတ်', 'စုံကပ်', 'မကပ်', 'စုံကပ်R', 'မကပ်R', 'ကပ်'];
         
         return specialTypes.some(type => withDigitTypes.includes(type));
     }
     
-    // Number generation functions (ORIGINAL FROM keyboard.js)
+    // Number generation functions (from B code)
     function generateFrontNumbers(digit) {
         const numbers = [];
         for (let i = 0; i <= 9; i++) {
@@ -668,6 +741,53 @@ function handleNumberInput(digit) {
             }
         }
         return numbers;
+    }
+    
+    function generateEvenKhatNumbers(digit) {
+        const numbers = [];
+        const evenDigits = [0, 2, 4, 6, 8];
+        for (const evenDigit of evenDigits) {
+            numbers.push(parseInt(digit.toString() + evenDigit.toString()));
+        }
+        return numbers;
+    }
+    
+    function generateOddKhatNumbers(digit) {
+        const numbers = [];
+        const oddDigits = [1, 3, 5, 7, 9];
+        for (const oddDigit of oddDigits) {
+            numbers.push(parseInt(digit.toString() + oddDigit.toString()));
+        }
+        return numbers;
+    }
+    
+    function generateEvenKhatRNumbers(digit) {
+        const numbers = [];
+        const evenDigits = [0, 2, 4, 6, 8];
+        for (const evenDigit of evenDigits) {
+            numbers.push(parseInt(digit.toString() + evenDigit.toString()));
+            numbers.push(parseInt(evenDigit.toString() + digit.toString()));
+        }
+        return [...new Set(numbers)];
+    }
+    
+    function generateOddKhatRNumbers(digit) {
+        const numbers = [];
+        const oddDigits = [1, 3, 5, 7, 9];
+        for (const oddDigit of oddDigits) {
+            numbers.push(parseInt(digit.toString() + oddDigit.toString()));
+            numbers.push(parseInt(oddDigit.toString() + digit.toString()));
+        }
+        return [...new Set(numbers)];
+    }
+    
+    function generateKhatNumbers(digit) {
+        const numbers = [];
+        for (let i = 0; i <= 9; i++) {
+            numbers.push(parseInt(digit.toString() + i.toString()));
+            numbers.push(parseInt(i.toString() + digit.toString()));
+        }
+        return [...new Set(numbers)];
     }
     
     function generateCombinationsFromArray(arr, k) {
@@ -759,7 +879,7 @@ function handleNumberInput(digit) {
         return parseInt(s.split('').reverse().join(''));
     }
     
-    // ORIGINAL ARRAY INTEGRATION FROM keyboard.js
+    // ORIGINAL ARRAY INTEGRATION (unchanged from A code)
     function addBetsToA3Array(numbers, amount, type) {
         numbers.forEach(num => {
             addSingleBetToA3Array(num, amount, type);
@@ -767,7 +887,7 @@ function handleNumberInput(digit) {
     }
     
     function addSingleBetToA3Array(num, amount, type) {
-        // Get or create global bets array - ORIGINAL LOGIC FROM keyboard.js
+        // Get or create global bets array
         let targetBets;
         let targetTotal;
         
@@ -807,7 +927,7 @@ function handleNumberInput(digit) {
         window.bets = targetBets;
         window.totalAmount = targetTotal;
         
-        // Update display - ORIGINAL LOGIC
+        // Update display
         if (typeof updateDisplay === 'function') {
             updateDisplay();
         } else {
@@ -848,14 +968,13 @@ function handleNumberInput(digit) {
     
     function autoScrollToListView() {
         if (listView) {
-            // Wait a bit for the DOM to update
             setTimeout(() => {
                 listView.scrollTop = listView.scrollHeight;
             }, 100);
         }
     }
     
-    // Global delete function - ORIGINAL FROM keyboard.js
+    // Global delete function
     window.deleteGlobalBet = function(index) {
         if (!confirm('ဖျက်မှာသေချာပါသလား?')) return;
         
@@ -879,5 +998,5 @@ function handleNumberInput(digit) {
         }
     };
     
-    console.log('Keyboard.js - Original style with a3.js integration loaded successfully (Fixed Overwrite)');
+    console.log('Keyboard.js - Version A with B logic loaded successfully');
 });
