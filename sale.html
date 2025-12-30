@@ -159,6 +159,7 @@
             flex: 1;
             overflow-y: auto;
             min-height: 0;
+            max-height: calc(100vh - 300px);
         }
 
         .bet-list {
@@ -430,6 +431,7 @@
             display: flex;
             flex-direction: column;
             flex: 1;
+            min-height: 200px;
         }
 
         textarea {
@@ -440,7 +442,7 @@
             font-family: 'Pyidaungsu', 'Myanmar Text', sans-serif;
             font-size: 14px;
             resize: vertical;
-            min-height: 100px;
+            min-height: 80px;
             margin-bottom: 10px;
             flex: 1;
         }
@@ -563,6 +565,10 @@
             
             .right-frame {
                 max-width: 100%;
+            }
+            
+            .list-view {
+                max-height: 300px;
             }
         }
 
@@ -876,62 +882,17 @@
         </div>
     </div>
 
+   
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const cptBtn = document.getElementById('cptBtn');
             const inputFrame = document.getElementById('inputFrame');
             const buttonsScrollContainer = document.getElementById('buttonsScrollContainer');
             const originalEditArea = document.getElementById('originalEditArea');
-            const checkboxButtons = document.querySelectorAll('.checkbox-btn');
-            const textview = document.getElementById('textview');
+        
             
             let isOriginalView = true; // Start with original view
-            let selectedTypes = new Set(); // Store selected checkbox types
-            
-            // Toggle checkbox button selection
-            checkboxButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    const type = this.getAttribute('data-type');
-                    this.classList.toggle('checked');
-                    
-                    if (this.classList.contains('checked')) {
-                        selectedTypes.add(type);
-                    } else {
-                        selectedTypes.delete(type);
-                    }
-                    
-                    // Update textview display based on selected types
-                    updateTextView();
-                    // Update input fields based on selection
-                    updateInputFields();
-                });
-            });
-            
-            // Update textview display
-            function updateTextView() {
-                if (selectedTypes.size === 0) {
-                    textview.textContent = '-';
-                    textview.style.borderColor = '#e74c3c';
-                } else {
-                    const typesArray = Array.from(selectedTypes);
-                    textview.textContent = typesArray.join('/');
-                    textview.style.borderColor = '#2ecc71';
-                    textview.style.backgroundColor = '#e8f8f5';
-                }
-            }
-            
-            // Update input fields based on selected types
-            function updateInputFields() {
-                const editNum1 = document.getElementById('editNum1');
-                
-                // If special types are selected, focus on amount field
-                if (selectedTypes.size > 0) {
-                    editNum1.placeholder = "ဂဏန်း (optional)";
-                    document.getElementById('editNum2').focus();
-                } else {
-                    editNum1.placeholder = "ဂဏန်း";
-                }
-            }
+        
             
             // Toggle between keyboard and textarea view
             cptBtn.addEventListener('click', function() {
@@ -962,6 +923,7 @@
             updateTextView();
         });
     </script>
+
 
     <script src="su.js"></script>
     <script src="sale.js"></script>
